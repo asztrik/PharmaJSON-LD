@@ -9,12 +9,12 @@ The SuggestQuery part holds the queried IRI, the SuggestResult has the suggested
   "SuggestResult": [
     {
       "skos:exactMatch": "IRI00002",
-"skos:prefLabel": { "@value": "Corvus", "@language": "lat"},
+      "skos:prefLabel": { "@value": "Corvus", "@language": "lat"},
       "skos:broader": { "@value": "Birds", "@language": "eng"}
     },
     {
       "skos:exactMatch": "IRI00003",
-"skos:prefLabel": { "@value": "Birds", "@language": "eng"},
+      "skos:prefLabel": { "@value": "Birds", "@language": "eng"},
       "skos:broader": { "@value": "Animals", "@language": "eng"}
     }
   ]
