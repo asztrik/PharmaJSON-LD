@@ -3,6 +3,7 @@
 ## Suggest method result
 The SuggestQuery part holds the queried IRI, the SuggestResult has the suggested terms
 
+```
 {
   "SuggestQuery": {"skos:exactMatch": "IRI00001"},  
   "SuggestResult": [
@@ -18,12 +19,12 @@ The SuggestQuery part holds the queried IRI, the SuggestResult has the suggested
     }
   ]
 }
-
+```
 
 
 ## GetChildren method result
 Same structure as above.
-
+```
 {
   "GetChildrenQuery": {"skos:exactMatch": "IRI00002"},  
   "GetChildrenResult": [
@@ -45,3 +46,4 @@ Same structure as above.
     }
   ]
 }
+```
