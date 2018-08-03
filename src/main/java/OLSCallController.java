@@ -13,16 +13,28 @@ import org.json.JSONObject;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 public class OLSCallController {
 
 	
-	// TODO getChildren and Update methods
+	@Autowired
+	private PharmaRepository pr;
 	
-	// TODO Storage...
+	@RequestMapping("/update")
+    public String getChildren() {
+    	
+    	return "ToDo";
+    }	
 	
-    @RequestMapping("/suggest")
+    @RequestMapping("/getchildren")
+    public String getChildren(@RequestParam(value="iri", defaultValue="GO:0043226") String iri) {
+    	
+    	return "ToDo";
+    }
+	
+	@RequestMapping("/suggest")
     public String suggest(@RequestParam(value="iri", defaultValue="GO:0043226") String iri) {
         
     	// Object coming from the OLS directly
@@ -37,7 +49,10 @@ public class OLSCallController {
     	// Resulting JSON, what we will store / pass to the FE
     	JSONObject pharmaJson = new JSONObject();
     	
-    	// TODO error handling!    	
+    	
+    	// TODO error handling!  
+    	// _embedded field not found, etc...
+    	// BLOCKED BY: know the full structure & fields we need...
     	
     	// get thet term one by one
     	for (int i=0; i < terms.length(); i++) {
@@ -51,8 +66,17 @@ public class OLSCallController {
     			//pharmaTerm.put("rdfs:label", term.getString("synonyms"));
     			pharmaTerm.put("skos:broader", term.getJSONObject("_links").getJSONObject("parents").getString("href"));
     		pharmaArray.put(pharmaTerm);
+    		
+    		PharmaTerm pt = new PharmaTerm();
+    		pt.setIri(term.getString("iri"));
+    		pt.setParent(term.getJSONObject("_links").getJSONObject("parents").getString("href"));
+    		pt.setSynonym(term.getString("label"));
 
+    		pr.save(pt);
     	}
+    
+    	
+    	
     	
     	// finish JSON
     	// TODO structure it as in the proposal!
