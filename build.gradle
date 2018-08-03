@@ -21,6 +21,7 @@ bootJar {
 
 repositories {
     mavenCentral()
+    maven { url "https://repository.jboss.org/nexus/content/repositories/releases" }
 }
 
 sourceCompatibility = 1.8
@@ -30,7 +31,13 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     compile group: 'org.json', name: 'json', version: '20180130'
     compile 'org.springframework.boot:spring-boot-starter-data-jpa'
+    compile("com.h2database:h2")
     compile 'mysql:mysql-connector-java'
+    compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.0'
+    compile group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0'
+    compile group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.3.0'
+    compile group: 'javax.activation', name: 'activation', version: '1.1.1'    
     testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile('javax.xml.bind:jaxb-api')
 }
 
