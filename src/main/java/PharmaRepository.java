@@ -1,5 +1,6 @@
 package hello;
 
+import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 
 import hello.PharmaTerm;
@@ -9,4 +10,5 @@ import hello.PharmaTerm;
 
 public interface PharmaRepository extends CrudRepository<PharmaTerm, Long> {
 
+	List<PharmaTerm> findByIri(String iri);
 }

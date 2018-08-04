@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,18 +23,63 @@ public class OLSCallController {
 	@Autowired
 	private PharmaRepository pr;
 	
+	/**
+	 * TEMPORARY TASK FOR THIS METHOD
+	 * - nothing
+	 * 
+	 * WHAT IT SHOULD DO
+	 * - get a list of IRI-s to be queried
+	 * - get them from the OLS
+	 * - compare the full persisted data set to the results
+	 * - update where necessary
+	 * @return
+	 */
 	@RequestMapping("/update")
     public String getChildren() {
     	
-    	return "ToDo";
+    	return "Work in progres...";
     }	
 	
+	/**
+	 * TEMPORARY TASK FOR THIS METHOD
+	 * - query persisted data
+	 * - display results
+	 * 
+	 * WHAT IT SHOULD DO
+	 * - query persisted
+	 * - display only the result's children (go by parent...)
+	 * 
+	 * @param iri
+	 * @return
+	 */
     @RequestMapping("/getchildren")
     public String getChildren(@RequestParam(value="iri", defaultValue="GO:0043226") String iri) {
     	
-    	return "ToDo";
+    	String retrunstring = "";
+    	
+		for (PharmaTerm pharmaTerm : pr.findAll()) {
+			retrunstring = retrunstring + "   AND   " + pharmaTerm.toString();
+		}
+		
+		List<PharmaTerm> iris = pr.findByIri("http://purl.obolibrary.org/obo/GO_0005929");
+		retrunstring = "IRI: " + iris.get(0).getIri() + " Parent: " + iris.get(0).getParent();
+    	
+    	
+    	return retrunstring + " thats all folks";
     }
 	
+    /**
+     * TEMPORARY TASK FOR THIS METHOD:
+     * - query OLS
+     * - persist results
+     * - display string
+     * 
+     * WHAT IT SHOUD DO:
+     * - query persisted data
+     * - display results
+     * @param iri
+     * @return
+     */
 	@RequestMapping("/suggest")
     public String suggest(@RequestParam(value="iri", defaultValue="GO:0043226") String iri) {
         
