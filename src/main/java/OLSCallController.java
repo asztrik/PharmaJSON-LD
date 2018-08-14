@@ -19,6 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RestController
 public class OLSCallController {
 
+	/**
+	 * Make a script that creates the DB and the configs...
+	 */
 	
 	@Autowired
 	private PharmaRepository pr;
@@ -28,10 +31,9 @@ public class OLSCallController {
 	 * - nothing
 	 * 
 	 * WHAT IT SHOULD DO
-	 * - get a list of IRI-s to be queried
-	 * - get them from the OLS
-	 * - compare the full persisted data set to the results
-	 * - update where necessary
+	 * - go IRI to IRI in the DB and check them against the OLS
+	 * - should have an optional IRI parameter
+	 * - consider renaming! (update(IRI) and regularUpdate()...)
 	 * @return
 	 */
 	@RequestMapping("/update")
@@ -47,7 +49,7 @@ public class OLSCallController {
 	 * 
 	 * WHAT IT SHOULD DO
 	 * - query persisted
-	 * - display only the result's children (go by parent...)
+	 * - return subtree of the found IRI
 	 * 
 	 * @param iri
 	 * @return
@@ -76,6 +78,7 @@ public class OLSCallController {
      * 
      * WHAT IT SHOUD DO:
      * - query persisted data
+     * - query by text (i.e. you begin to type "cor" and both CORvus and uniCORn show up...
      * - display results
      * @param iri
      * @return
