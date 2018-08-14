@@ -99,6 +99,8 @@ public class OLSCallController {
     	// TODO error handling!  
     	// _embedded field not found, etc...
     	// BLOCKED BY: know the full structure & fields we need...
+    
+    	String returnstring = "And the JSON is..." + System.lineSeparator();
     	
     	// get thet term one by one
     	for (int i=0; i < terms.length(); i++) {
@@ -119,16 +121,13 @@ public class OLSCallController {
     		pt.setSynonym(term.getString("label"));
 
     		pr.save(pt);
+    		
+    		returnstring = returnstring + pt.toJSON().toString() + System.lineSeparator();
+    		
     	}
     
     	
-    	
-    	
-    	// finish JSON
-    	// TODO structure it as in the proposal!
-    	pharmaJson.put("Suggest", pharmaArray);
-    	
-    	return pharmaJson.toString();
+    	return returnstring;
     	
     }
     

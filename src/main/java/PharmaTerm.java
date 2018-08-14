@@ -5,6 +5,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 @Entity
 public class PharmaTerm {
 
@@ -50,6 +53,17 @@ public class PharmaTerm {
 		this.parent = parent;
 	}
 	
+	public JSONObject toJSON() {
+		JSONObject output = new JSONObject(
+				"{PharmaTerm : {"
+				+ "\"skos:exactMatch\":\""+this.iri+"\", "
+				+ "\"skos:prefLabel\":\""+this.synonym+"\", "
+				+ "\"skos:broader\":\""+this.synonym+"\"}"
+				+ "}");
+		
+		return output;
+		
+	}
 	
 	
 }
