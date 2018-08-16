@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.List;
+import java.util.Iterator;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,58 +35,39 @@ public class OLSCallController {
 	 * - go IRI to IRI in the DB and check them against the OLS
 	 * - should have an optional IRI parameter
 	 * - consider renaming! (update(IRI) and regularUpdate()...)
-	 * @return
-	 */
+	 * 
+	 * update(IRI):
+     * create_new_if_not_exists(IRI)
+     * save_labels(IRI)
+     * update_parent_path(IRI)
+     * children = get_children(IRI)
+     * foreach child_IRI in children {
+     *   set_child(IRI, child_IRI)
+     *   update(child_IRI)
+     * }
+	 * 
+	 * 
+	 **/
 	@RequestMapping("/update")
-    public String getChildren() {
+    public String update() {
     	
     	return "Work in progres...";
     }	
-	
+
 	/**
-	 * TEMPORARY TASK FOR THIS METHOD
-	 * - query persisted data
-	 * - display results
-	 * 
-	 * WHAT IT SHOULD DO
-	 * - query persisted
-	 * - return subtree of the found IRI
+	 *  update_parent_path(IRI):
+	 *	  parentIRI = get_parent(IRI)
+	 *	  create_new_if_not_exists(parentIRI)
+	 *	  set_child(parentIRI, IRI)
+	 *	  save_labels(parentIRI)
+	 *	  update_parent_path(parentIRI)
+	 *	}
 	 * 
 	 * @param iri
 	 * @return
 	 */
-    @RequestMapping("/getchildren")
-    public String getChildren(@RequestParam(value="iri", defaultValue="GO:0043226") String iri) {
-    	
-    	String retrunstring = "";
-    	
-		for (PharmaTerm pharmaTerm : pr.findAll()) {
-			retrunstring = retrunstring + "   AND   " + pharmaTerm.toString();
-		}
-		
-		List<PharmaTerm> iris = pr.findByIri("http://purl.obolibrary.org/obo/GO_0005929");
-		retrunstring = "IRI: " + iris.get(0).getIri() + " Parent: " + iris.get(0).getParent();
-    	
-    	
-    	return retrunstring + " thats all folks";
-    }
-	
-    /**
-     * TEMPORARY TASK FOR THIS METHOD:
-     * - query OLS
-     * - persist results
-     * - display string
-     * 
-     * WHAT IT SHOUD DO:
-     * - query persisted data
-     * - query by text (i.e. you begin to type "cor" and both CORvus and uniCORn show up...
-     * - display results
-     * @param iri
-     * @return
-     */
-	@RequestMapping("/suggest")
-    public String suggest(@RequestParam(value="iri", defaultValue="GO:0043226") String iri) {
-        
+	@RequestMapping("/update_parent_path")
+    public String updateParentPath(@RequestParam(value="iri", defaultValue="GO:0043226") String iri) {
     	// Object coming from the OLS directly
     	JSONObject rawJson = callOLS(iri).getContent();
     	
@@ -103,7 +85,7 @@ public class OLSCallController {
     	// _embedded field not found, etc...
     	// BLOCKED BY: know the full structure & fields we need...
     
-    	String returnstring = "And the JSON is..." + System.lineSeparator();
+    	String returnstring = "";
     	
     	// get thet term one by one
     	for (int i=0; i < terms.length(); i++) {
@@ -130,7 +112,58 @@ public class OLSCallController {
     	}
     
     	
-    	return returnstring;
+    	return returnstring;    	
+    	
+    }		
+	
+	/**
+	 * 
+	 * WHAT IT SHOULD DO
+	 * - query persisted
+	 * - return subtree of the found IRI
+	 * 
+	 * @param iri
+	 * @return
+	 */
+    @RequestMapping("/getchildren")
+    public String getChildren(@RequestParam(value="parent", defaultValue="GO:0043226") String parent) {
+ 	
+    	
+    	String retrunstring = "WIP...";
+		
+		List<PharmaTerm> children = pr.findByParent(parent);
+		for (Iterator<PharmaTerm> i = children.iterator(); i.hasNext();) {
+			PharmaTerm item = i.next();
+			retrunstring = retrunstring + System.lineSeparator() + item.toJSON().toString();
+		} 
+    	
+    	
+    	return retrunstring;
+
+    }
+	
+    /**
+     * 
+     * WHAT IT DOES:
+     * - query persisted data
+     * - query by text (i.e. you begin to type "cor" and both CORvus and uniCORn show up...
+     * - display results
+     * @param iri
+     * @return
+     */
+	@RequestMapping("/suggest")
+    public String suggest(@RequestParam(value="label", defaultValue="extra") String label) {      
+		
+    	String retrunstring = "";
+		
+		List<PharmaTerm> labels = pr.findBySynonym(label);
+		for (Iterator<PharmaTerm> i = labels.iterator(); i.hasNext();) {
+			PharmaTerm item = i.next();
+			retrunstring = retrunstring + System.lineSeparator() + item.toJSON().toString();
+		} 
+    	
+    	
+    	return retrunstring;
     	
     }
     

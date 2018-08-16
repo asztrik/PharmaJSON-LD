@@ -2,6 +2,7 @@ package hello;
 
 import java.util.List;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import hello.PharmaTerm;
 
@@ -11,4 +12,11 @@ import hello.PharmaTerm;
 public interface PharmaRepository extends CrudRepository<PharmaTerm, Long> {
 
 	List<PharmaTerm> findByIri(String iri);
+	
+	/* NOT synonym, its the label, temporary solution! */
+	@Query("SELECT p FROM PharmaTerm p WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%'))")
+	List<PharmaTerm> findBySynonym(String synonym);
+	
+	/* NOT Final how the parents are identified...*/
+	List<PharmaTerm> findByParent(String parent);	
 }
