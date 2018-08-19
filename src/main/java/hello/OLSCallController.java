@@ -26,6 +26,8 @@ public class OLSCallController {
 	@Autowired
 	private EbiOlsRepository pr;
 	
+	private EbiOlsConnector eoc;
+	
 	/**
 	 * TEMPORARY TASK FOR THIS METHOD
 	 * - nothing
@@ -50,9 +52,9 @@ public class OLSCallController {
 	@RequestMapping("/update")
     public void update() {
     	
-		
+		System.out.println("OCC " + pr.toString());
 		// Query and store all EBI OLS terms...
-		EbiOlsConnector eoc = new EbiOlsConnector("GO:0043226");
+		eoc = new EbiOlsConnector("GO:0043226", pr);
 		
 		try {
 			eoc.queryAndStoreOLS();

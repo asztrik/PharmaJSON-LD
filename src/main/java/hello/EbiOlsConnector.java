@@ -9,8 +9,9 @@ import java.net.URL;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class EbiOlsConnector implements ExternalServiceConnector {
 
 	private URL url = null;
@@ -19,17 +20,20 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 	
 	private String iri;
 	
-	@Autowired
 	private EbiOlsRepository pr;
 	
-	EbiOlsConnector(URL url, HttpURLConnection conn, String iri) {
+	EbiOlsConnector() {	}	
+	
+	EbiOlsConnector(URL url, HttpURLConnection conn, String iri, EbiOlsRepository eor) {
 		this.iri = iri;
 		this.url = url;
 		this.conn = conn;
+		this.pr = eor;
 	}
 	
-	EbiOlsConnector(String iri) {
+	EbiOlsConnector(String iri, EbiOlsRepository eor) {
 		
+		this.pr = eor;
 		this.iri = iri;
 		
 		try {
@@ -96,7 +100,6 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 			e.printStackTrace();
 		}
 		
-		// TODO terms might be null
 		
 		// All the terms for one query as array
     	JSONArray terms = json.getJSONObject("_embedded").getJSONArray("terms");
@@ -113,6 +116,8 @@ public class EbiOlsConnector implements ExternalServiceConnector {
     		//	//pharmaTerm.put("rdfs:label", term.getString("synonyms"));
     		//	pharmaTerm.put("skos:broader", term.getJSONObject("_links").getJSONObject("parents").getString("href"));
     		//pharmaArray.put(pharmaTerm);
+    		
+    		System.out.println(pr.toString());
     		
     		// Create Entity that will be persisted
     		EbiOlsTerm pt = new EbiOlsTerm();
