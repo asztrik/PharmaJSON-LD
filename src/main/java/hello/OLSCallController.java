@@ -1,0 +1,146 @@
+package hello;
+
+
+import java.util.List;
+import java.util.Iterator;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@RestController
+public class OLSCallController {
+
+	/**
+	 * 
+	 * MINOR TODOS
+	 * 
+	 * Make a script that creates the DB and the configs...
+	 * Why does the db go away on server reboot??
+	 * Duplicate entries?
+	 * Display the JSON in browser right
+	 *  
+	 */
+	
+	@Autowired
+	private EbiOlsRepository pr;
+	
+	/**
+	 * TEMPORARY TASK FOR THIS METHOD
+	 * - nothing
+	 * 
+	 * WHAT IT SHOULD DO
+	 * - go IRI to IRI in the DB and check them against the OLS
+	 * - should have an optional IRI parameter
+	 * - consider renaming! (update(IRI) and regularUpdate()...)
+	 * 
+	 * update(IRI):
+     * create_new_if_not_exists(IRI)
+     * save_labels(IRI)
+     * update_parent_path(IRI)
+     * children = get_children(IRI)
+     * foreach child_IRI in children {
+     *   set_child(IRI, child_IRI)
+     *   update(child_IRI)
+     * }
+	 * 
+	 * 
+	 **/
+	@RequestMapping("/update")
+    public void update() {
+    	
+		
+		// Query and store all EBI OLS terms...
+		EbiOlsConnector eoc = new EbiOlsConnector("GO:0043226");
+		
+		try {
+			eoc.queryAndStoreOLS();
+			eoc.setIri("GO:0043227");
+			eoc.queryAndStoreOLS();
+			
+			//...
+			
+		} catch (ExternalServiceConnectorException e) {
+
+			e.printStackTrace();
+		}
+		
+		// Query and store all Cellosaurus terms...
+		
+		
+		// Report Success.
+    }	
+
+	/**
+	 *  update_parent_path(IRI):
+	 *	  parentIRI = get_parent(IRI)
+	 *	  create_new_if_not_exists(parentIRI)
+	 *	  set_child(parentIRI, IRI)
+	 *	  save_labels(parentIRI)
+	 *	  update_parent_path(parentIRI)
+	 *	}
+	 * 
+	 * @param iri
+	 * @return
+	 */
+	@RequestMapping("/update_parent_path")
+    public String updateParentPath(@RequestParam(value="iri", defaultValue="GO:0043226") String iri) {
+    	
+    	return "WIP...";    	
+    	
+    }		
+	
+	/**
+	 * 
+	 * WHAT IT SHOULD DO
+	 * - query persisted
+	 * - return subtree of the found IRI
+	 * 
+	 * @param iri
+	 * @return
+	 */
+    @RequestMapping("/getchildren")
+    public String getChildren(@RequestParam(value="parent", defaultValue="GO:0043226") String parent) {
+ 	
+    	
+    	String retrunstring = "WIP...";
+		
+		List<EbiOlsTerm> children = pr.findByParent(parent);
+		for (Iterator<EbiOlsTerm> i = children.iterator(); i.hasNext();) {
+			EbiOlsTerm item = i.next();
+			retrunstring = retrunstring + System.lineSeparator() + item.toJSON().toString();
+		} 
+    	
+    	
+    	return retrunstring;
+
+    }
+	
+    /**
+     * 
+     * WHAT IT DOES:
+     * - query persisted data
+     * - query by text (i.e. you begin to type "cor" and both CORvus and uniCORn show up...
+     * - display results
+     * @param iri
+     * @return
+     */
+	@RequestMapping("/suggest")
+    public String suggest(@RequestParam(value="label", defaultValue="extra") String label) {      
+		
+    	String retrunstring = "";
+		
+		List<EbiOlsTerm> labels = pr.findBySynonym(label);
+		for (Iterator<EbiOlsTerm> i = labels.iterator(); i.hasNext();) {
+			EbiOlsTerm item = i.next();
+			retrunstring = retrunstring + System.lineSeparator() + item.toJSON().toString();
+		} 
+    	
+    	
+    	return retrunstring;
+    	
+    }
+    
+}
+

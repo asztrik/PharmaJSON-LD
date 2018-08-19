@@ -1,26 +1,35 @@
 package hello;
 
-import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-@Entity
-public class PharmaTerm {
-
+@MappedSuperclass
+public abstract class AbstractTerm {
+	
+	// An Id is needed for the Persistence API
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
-	
-	private String iri;
-	
-	private String synonym;
-	
-	private String parent;
 
+	// Here are the fields that all the Terms have
+	protected String iri;
+	
+	protected String label;
+
+	protected String synonym;
+	
+	protected String parent;
+
+	// All the Terms need a method that converts them to a JSON
+	// But the exact format / content depends on the FE fields...
+	public abstract JSONObject toJSON();
+	
+	// getters and setters...
+	
 	public Integer getId() {
 		return id;
 	}
@@ -37,6 +46,14 @@ public class PharmaTerm {
 		this.iri = iri;
 	}
 
+	public String getLabel() {
+		return label;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
+	}
+	
 	public String getSynonym() {
 		return synonym;
 	}
@@ -53,17 +70,6 @@ public class PharmaTerm {
 		this.parent = parent;
 	}
 	
-	public JSONObject toJSON() {
-		JSONObject output = new JSONObject(
-				"{PharmaTerm : {"
-				+ "\"skos:exactMatch\":\""+this.iri+"\", "
-				+ "\"skos:prefLabel\":\""+this.synonym+"\", "
-				+ "\"skos:broader\":\""+this.synonym+"\"}"
-				+ "}");
-		
-		return output;
-		
-	}
-	
+
 	
 }
