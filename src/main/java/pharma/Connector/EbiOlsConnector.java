@@ -1,4 +1,4 @@
-package hello;
+package pharma.Connector;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,6 +10,11 @@ import java.net.URL;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
+
+import pharma.Exception.ExternalServiceConnectorException;
+import pharma.Repository.EbiOlsRepository;
+import pharma.Term.AbstractTerm;
+import pharma.Term.EbiOlsTerm;
 
 @Service
 public class EbiOlsConnector implements ExternalServiceConnector {
@@ -31,7 +36,7 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 		this.pr = eor;
 	}
 	
-	EbiOlsConnector(String iri, EbiOlsRepository eor) {
+	public EbiOlsConnector(String iri, EbiOlsRepository eor) {
 		
 		this.pr = eor;
 		this.iri = iri;
@@ -93,7 +98,11 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 	            sb.append(line);
 	        }        
 	        
-	         json = new JSONObject(sb.toString());
+	       
+	        if(sb.toString().isEmpty())
+	        	throw new ExternalServiceConnectorException("Empty response from EbiOLS");	
+	        	
+	        json = new JSONObject(sb.toString());
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -117,7 +126,6 @@ public class EbiOlsConnector implements ExternalServiceConnector {
     		//	pharmaTerm.put("skos:broader", term.getJSONObject("_links").getJSONObject("parents").getString("href"));
     		//pharmaArray.put(pharmaTerm);
     		
-    		System.out.println(pr.toString());
     		
     		// Create Entity that will be persisted
     		EbiOlsTerm pt = new EbiOlsTerm();

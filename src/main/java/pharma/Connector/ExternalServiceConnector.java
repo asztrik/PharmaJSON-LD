@@ -1,4 +1,7 @@
-package hello;
+package pharma.Connector;
+
+import pharma.Exception.ExternalServiceConnectorException;
+import pharma.Term.AbstractTerm;
 
 public interface ExternalServiceConnector {
 	

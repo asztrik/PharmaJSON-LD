@@ -1,10 +1,11 @@
-package hello;
+package pharma.Repository;
 
 import java.util.List;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.jpa.repository.Query;
 
-import hello.EbiOlsTerm;
+import pharma.Term.EbiOlsTerm;
+
+import org.springframework.data.jpa.repository.Query;
 
 // This will be AUTO IMPLEMENTED by Spring into a Bean called userRepository
 // CRUD refers Create, Read, Update, Delete

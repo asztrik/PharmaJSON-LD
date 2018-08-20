@@ -1,4 +1,4 @@
-package hello;
+package pharma;
 
 
 import java.util.List;
@@ -7,6 +7,12 @@ import java.util.Iterator;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import pharma.Connector.EbiOlsConnector;
+import pharma.Exception.ExternalServiceConnectorException;
+import pharma.Repository.EbiOlsRepository;
+import pharma.Term.EbiOlsTerm;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
@@ -50,15 +56,14 @@ public class OLSCallController {
 	 * 
 	 **/
 	@RequestMapping("/update")
-    public void update() {
+    public String update() {
     	
-		System.out.println("OCC " + pr.toString());
 		// Query and store all EBI OLS terms...
 		eoc = new EbiOlsConnector("GO:0043226", pr);
 		
 		try {
 			eoc.queryAndStoreOLS();
-			eoc.setIri("GO:0043227");
+			eoc.setIri("GO:0043231");
 			eoc.queryAndStoreOLS();
 			
 			//...
@@ -72,6 +77,7 @@ public class OLSCallController {
 		
 		
 		// Report Success.
+		return "{ \"updateStatus\": \"success\"}";
     }	
 
 	/**
@@ -143,6 +149,6 @@ public class OLSCallController {
     	return retrunstring;
     	
     }
-    
+
 }
 

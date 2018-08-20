@@ -1,4 +1,4 @@
-package hello;
+package pharma.Term;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
