@@ -1,18 +1,20 @@
 # PharmaJSON-LD
 
 This is a simple REST Service to
-- fetch data from the OLS
+- fetch data from an external service (multiple can be configured)
 - Build entities and persist them
 - Gives stored data back as JSON-LD with the /suggest and /getchildren methods
 
 It is only the core functionality, the fetched data and its fields are not final yet
 
-## How does ot work
+## How does it work
 
 1. Download the repo
 2. cd into "PharmaJSON-LD"
 3. ./gradlew bootRun
-4. Try for example http://localhost:8080/suggest?iri=GO:0043230 where the iri parameter refers to an IRI used by the OLS (and it is also the persisted entity's UID in the DB)
+4. Go into src/main/resources/application.properties and see the database connection details. To get the demo work you should create a database that can be accessed like its written in the application.properties.
+5. Run http://localhost:8080/suggest?update - this will run a hardcoded update that fetches 2 terms from the EBI OLS
+6. Try for example http://localhost:8080/suggest?label=mem where the iri parameter refers to an IRI used by the OLS (and it is also the persisted entity's UID in the DB)
 
 
 # Work in progress
