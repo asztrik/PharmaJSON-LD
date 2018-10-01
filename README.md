@@ -23,6 +23,12 @@ The responses should look like the two sections below; but for now it is not yet
 
 The /update method (without parameters) should fetch all the terms we are using in the FE and persist them with all the necessary fileds. This method is not yet implemented.
 
+## ToDo-s
+- create a High-level diagram of the full project and process to visualize the components and their responsibilites
+- prepare dummy data and examples
+- integrating arbitrary outside sources
+- helper scripts to initialize the DB, fetching data based on a list
+- deployment questions
 
 
 ## Suggest method result
