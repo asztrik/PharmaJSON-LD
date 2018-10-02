@@ -36,45 +36,33 @@ The SuggestQuery part holds the queried IRI, the SuggestResult has the suggested
 
 ```
 {
-  "SuggestQuery": {"skos:exactMatch": "IRI00001"},  
-  "SuggestResult": [
+  "extra": [
     {
-      "skos:exactMatch": "IRI00002",
-      "skos:prefLabel": { "@value": "Corvus", "@language": "lat"},
-      "skos:broader": { "@value": "Birds", "@language": "eng"}
-    },
-    {
-      "skos:exactMatch": "IRI00003",
-      "skos:prefLabel": { "@value": "Birds", "@language": "eng"},
-      "skos:broader": { "@value": "Animals", "@language": "eng"}
+      "skos:prefLabel": [
+        {
+          "@value": "extracellular organelle",
+          "@language": "eng"
+        }
+      ],
+      "skos:exactMatch": "http://purl.obolibrary.org/obo/GO_0043230",
+      "rdfs:label": [
+        {
+          "@value": "extracellular organelle",
+          "@language": "eng"
+        }
+      ],
+      "@type": "skos:Concept"
     }
-  ]
+  ],
+  "@context": {
+    "GOCellComp": "http://purl.obolibrary.org/obo/GO_0005575"
+  }
 }
 ```
 
 
 ## GetChildren method result
-Same structure as above.
+Roughly the same structure as above.
 ```
-{
-  "GetChildrenQuery": {"skos:exactMatch": "IRI00002"},  
-  "GetChildrenResult": [
-    {
-      "skos:exactMatch": "IRI00001",
-      "skos:prefLabel": { "@value": "Crow", "@language": "eng"},
-      "rdfs:label": { "@value": "Rabe", "@language": "deu"},
-      "skos:broader": { "@value": "Corvus", "@language": "lat"}
-    },
-    {
-      "skos:exactMatch": "IRI00004",
-      "skos:prefLabel": { "@value": "Hooded Crow", "@language": "eng"},
-      "skos:broader": { "@value": "Corvus", "@language": "lat"}
-    },
-    {
-      "skos:exactMatch": "IRI00005",
-      "skos:prefLabel": { "@value": "Indian Crow", "@language": "eng"},
-      "skos:broader": { "@value": "Corvus", "@language": "lat"}
-    }
-  ]
-}
+Exact contents and structure TBA
 ```
