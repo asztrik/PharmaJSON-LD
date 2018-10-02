@@ -14,13 +14,26 @@ public class EbiOlsTerm extends AbstractTerm {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
 	
-	public JSONObject toJSON() {
+	public JSONObject toJSON(String searchterm) {
+		searchterm = searchterm != null ? searchterm : "";
+		
+		String jsonassembler = "{\"@context\": { \"GOCellComp\": \"http://purl.obolibrary.org/obo/GO_0005575\" },"
+				+"\""+searchterm+"\": [ { \"@type\":\"skos:Concept\","
+				+ "\"skos:prefLabel\": [ { \"@value\": \""+this.synonym+"\", "
+				+ "\"@language\":\"eng\"} ], \"rdfs:label\":[ { \"@value\": " 
+				+ "\"" +this.synonym+"\", \"@language\":\"eng\" } ],"
+				+ "\"skos:exactMatch\":\""+this.iri+"\"} ] }";
+				
+		System.out.println("JJSSOONN"+jsonassembler);
+		
+		
 		JSONObject output = new JSONObject(
-				"{EbiOlsTerm : {"
-				+ "\"skos:exactMatch\":\""+this.iri+"\", "
-				+ "\"skos:prefLabel\":\""+this.synonym+"\", "
-				+ "\"skos:broader\":\""+this.synonym+"\"}"
-				+ "}");
+				"{\"@context\": { \"GOCellComp\": \"http://purl.obolibrary.org/obo/GO_0005575\" },"
+				+"\""+searchterm+"\": [ { \"@type\":\"skos:Concept\","
+				+ "\"skos:prefLabel\": [ { \"@value\": \""+this.synonym+"\", "
+				+ "\"@language\":\"eng\"} ], \"rdfs:label\":[ { \"@value\": " 
+				+ "\"" +this.synonym+"\", \"@language\":\"eng\" } ],"
+				+ "\"skos:exactMatch\":\""+this.iri+"\"} ] }");
 		
 		return output;
 		

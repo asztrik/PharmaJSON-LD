@@ -117,7 +117,7 @@ public class OLSCallController {
 		List<EbiOlsTerm> children = pr.findByParent(parent);
 		for (Iterator<EbiOlsTerm> i = children.iterator(); i.hasNext();) {
 			EbiOlsTerm item = i.next();
-			retrunstring = retrunstring + System.lineSeparator() + item.toJSON().toString();
+			retrunstring = retrunstring + System.lineSeparator() + item.toJSON(parent).toString();
 		} 
     	
     	
@@ -142,7 +142,7 @@ public class OLSCallController {
 		List<EbiOlsTerm> labels = pr.findBySynonym(label);
 		for (Iterator<EbiOlsTerm> i = labels.iterator(); i.hasNext();) {
 			EbiOlsTerm item = i.next();
-			retrunstring = retrunstring + System.lineSeparator() + item.toJSON().toString();
+			retrunstring = retrunstring + System.lineSeparator() + item.toJSON(label).toString();
 		} 
     	
     	
