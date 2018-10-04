@@ -36,27 +36,43 @@ The SuggestQuery part holds the queried IRI, the SuggestResult has the suggested
 
 ```
 {
-  "extra": [
+  "@context": {
+    "GOCellComp": "http://purl.obolibrary.org/obo/GO_0005575"
+  },
+  "mem": [
     {
       "skos:prefLabel": [
         {
-          "@value": "extracellular organelle",
+          "@value": "membrane-bounded organelle",
           "@language": "eng"
         }
       ],
-      "skos:exactMatch": "http://purl.obolibrary.org/obo/GO_0043230",
+      "skos:exactMatch": "http://purl.obolibrary.org/obo/GO_0043227",
       "rdfs:label": [
         {
-          "@value": "extracellular organelle",
+          "@value": "membrane-bounded organelle",
+          "@language": "eng"
+        }
+      ],
+      "@type": "skos:Concept"
+    },
+    {
+      "skos:prefLabel": [
+        {
+          "@value": "non-membrane-bounded organelle",
+          "@language": "eng"
+        }
+      ],
+      "skos:exactMatch": "http://purl.obolibrary.org/obo/GO_0043228",
+      "rdfs:label": [
+        {
+          "@value": "non-membrane-bounded organelle",
           "@language": "eng"
         }
       ],
       "@type": "skos:Concept"
     }
-  ],
-  "@context": {
-    "GOCellComp": "http://purl.obolibrary.org/obo/GO_0005575"
-  }
+  ]
 }
 ```
 
