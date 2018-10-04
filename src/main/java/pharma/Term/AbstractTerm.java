@@ -26,7 +26,7 @@ public abstract class AbstractTerm {
 
 	// All the Terms need a method that converts them to a JSON
 	// But the exact format / content depends on the FE fields...
-	public abstract JSONObject toJSON(String searchterm);
+	public abstract JSONObject toJSON();
 	
 	// getters and setters...
 	

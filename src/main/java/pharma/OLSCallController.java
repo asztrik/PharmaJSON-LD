@@ -117,7 +117,7 @@ public class OLSCallController {
 		List<EbiOlsTerm> children = pr.findByParent(parent);
 		for (Iterator<EbiOlsTerm> i = children.iterator(); i.hasNext();) {
 			EbiOlsTerm item = i.next();
-			retrunstring = retrunstring + System.lineSeparator() + item.toJSON(parent).toString();
+			retrunstring = retrunstring + System.lineSeparator() + item.toJSON().toString();
 		} 
     	
     	
@@ -137,16 +137,24 @@ public class OLSCallController {
 	@RequestMapping("/suggest")
     public String suggest(@RequestParam(value="label", defaultValue="extra") String label) {      
 		
-    	String retrunstring = "";
+		//Add JSON wrapper (same for one OLS)
+    	String returnstring = "{\"@context\": { \"GOCellComp\": \"http://purl.obolibrary.org/obo/GO_0005575\" }," + 
+    			"\""+label+"\": [ ";
 		
 		List<EbiOlsTerm> labels = pr.findBySynonym(label);
 		for (Iterator<EbiOlsTerm> i = labels.iterator(); i.hasNext();) {
 			EbiOlsTerm item = i.next();
-			retrunstring = retrunstring + System.lineSeparator() + item.toJSON(label).toString();
+			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
+			returnstring = returnstring + ",";
 		} 
     	
-    	
-    	return retrunstring;
+		// remove last comma
+		returnstring = returnstring.substring(0, returnstring.length()-1);
+		
+    	//Add end of JSON wrapper
+		returnstring = returnstring + " ] }";
+		
+    	return returnstring;
     	
     }
 
