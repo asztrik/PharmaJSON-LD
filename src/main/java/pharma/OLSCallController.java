@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import pharma.Connector.EbiOlsConnector;
+import pharma.Connector.OboNcitConnector;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.EbiOlsRepository;
+import pharma.Repository.OboNcitRepository;
 import pharma.Term.EbiOlsTerm;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +33,10 @@ public class OLSCallController {
 	
 	@Autowired
 	private EbiOlsRepository pr;
+	private OboNcitRepository nr;
 	
 	private EbiOlsConnector eoc;
+	private OboNcitConnector ncc;
 	
 	/**
 	 * TEMPORARY TASK FOR THIS METHOD
@@ -60,6 +64,7 @@ public class OLSCallController {
     	
 		// Query and store all EBI OLS terms...
 		eoc = new EbiOlsConnector("GO:0043226", pr);
+		ncc = new OboNcitConnector("NCIT_C19160", nr);
 		
 		try {
 			eoc.queryAndStoreOLS();
@@ -67,6 +72,7 @@ public class OLSCallController {
 			eoc.queryAndStoreOLS();
 			
 			//...
+			ncc.queryAndStoreOLS();
 			
 		} catch (ExternalServiceConnectorException e) {
 
