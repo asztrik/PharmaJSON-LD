@@ -16,8 +16,15 @@ public class OboNcitTerm extends AbstractTerm {
 	
 	@Override
 	public JSONObject toJSON() {
-		// TODO Auto-generated method stub
-		return null;
+		JSONObject output = new JSONObject(
+				"{ \"@type\":\"skos:Concept\","
+				+ "\"skos:prefLabel\": [ { \"@value\": \""+this.synonym+"\", "
+				+ "\"@language\":\"eng\"} ], \"rdfs:label\":[ { \"@value\": " 
+				+ "\"" +this.synonym+"\", \"@language\":\"eng\" } ],"
+				+ "\"skos:exactMatch\":\""+this.iri+"\"} "
+				);
+		
+		return output;
 	}
 
 }
