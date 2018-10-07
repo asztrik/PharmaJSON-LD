@@ -143,7 +143,7 @@ public class OLSCallController {
 	@RequestMapping("/suggest")
     public String suggest(@RequestParam(value="label", defaultValue="extra") String label) {      
 		
-		//Add JSON wrapper (same for one OLS)
+		//Add JSON wrapper (same for one OLS) -- how to handle different OLS-es here??
     	String returnstring = "{\"@context\": { \"GOCellComp\": \"http://purl.obolibrary.org/obo/GO_0005575\" }," + 
     			"\""+label+"\": [ ";
 		
