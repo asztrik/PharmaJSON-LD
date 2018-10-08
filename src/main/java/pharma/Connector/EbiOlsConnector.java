@@ -100,7 +100,7 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 	        
 	       
 	        if(sb.toString().isEmpty())
-	        	throw new ExternalServiceConnectorException("Empty response from EbiOLS");	
+	        	throw new ExternalServiceConnectorException("Empty response from EbiOLS " + this.conn.getURL());	
 	        	
 	        json = new JSONObject(sb.toString());
 

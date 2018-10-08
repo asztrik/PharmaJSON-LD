@@ -67,6 +67,10 @@ public class OboNcitConnector implements ExternalServiceConnector {
 	@Override
 	public void queryAndStoreOLS() throws ExternalServiceConnectorException {
 		
+		//////////////////////////////////////////////////////
+		//////////////// MIGHT NEED TO PARSE THIS AS XML/RDF
+		//////////////////////////////////////////////////////
+		
 		// raw JSON
 		JSONObject json = null;
 		
@@ -85,12 +89,13 @@ public class OboNcitConnector implements ExternalServiceConnector {
 	        BufferedReader br = new BufferedReader(new InputStreamReader(
 	                (this.conn.getInputStream())));
 	        while ((line = br.readLine()) != null) {
+	        	System.out.println(line);
 	            sb.append(line);
 	        }        
 	        
 	       
 	        if(sb.toString().isEmpty())
-	        	throw new ExternalServiceConnectorException("Empty response from OboNcit");	
+	        	throw new ExternalServiceConnectorException("Empty response from OboNcit while querying " + this.conn.getURL());	
 	        	
 	        json = new JSONObject(sb.toString());
 

@@ -68,7 +68,7 @@ public class OLSCallController {
 		
 		try {
 			eoc.queryAndStoreOLS();
-			eoc.setIri("GO:0043231");
+			eoc = new EbiOlsConnector("GO:0043231", pr);
 			eoc.queryAndStoreOLS();
 			
 			//...
