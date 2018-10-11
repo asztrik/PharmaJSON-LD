@@ -7,12 +7,15 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import pharma.Exception.ExternalServiceConnectorException;
 
 import pharma.Repository.OboNcitRepository;
 import pharma.Term.AbstractTerm;
+import pharma.Term.EbiOlsTerm;
+import pharma.Term.OboNcitTerm;
 
 public class OboNcitConnector implements ExternalServiceConnector {
 
@@ -40,7 +43,7 @@ public class OboNcitConnector implements ExternalServiceConnector {
 		
 		try {
 			this.url = new URL(
-				    "http://purl.obolibrary.org/obo/"+this.iri);
+				    "https://www.ebi.ac.uk/ols/api/ontologies/ncit/terms?id="+this.iri);
 		} catch (MalformedURLException e1) {
 			e1.printStackTrace();
 		}
@@ -67,17 +70,13 @@ public class OboNcitConnector implements ExternalServiceConnector {
 	@Override
 	public void queryAndStoreOLS() throws ExternalServiceConnectorException {
 		
-		//////////////////////////////////////////////////////
-		//////////////// MIGHT NEED TO PARSE THIS AS XML/RDF
-		//////////////////////////////////////////////////////
-		
 		// raw JSON
 		JSONObject json = null;
 		
 		try {
 			if (this.conn.getResponseCode() != 200) {
 			    throw new RuntimeException("Failed : HTTP error code : "
-			        + this.conn.getResponseCode());
+			        + this.conn.getResponseCode() + " with URL " + this.conn.getURL());
 			    }
 
 
@@ -104,7 +103,21 @@ public class OboNcitConnector implements ExternalServiceConnector {
 			e.printStackTrace();
 		}
 		
-		System.out.println(json.toString());
+		// All the terms for one query as array
+    	JSONArray terms = json.getJSONObject("_embedded").getJSONArray("terms");
+    	
+    	// get the terms one by one
+    	for (int i=0; i < terms.length(); i++) {
+    		JSONObject term = terms.getJSONObject(i);
+   		
+    		// Create Entity that will be persisted
+    		OboNcitTerm pt = new OboNcitTerm();
+    		pt.setIri(term.getString("iri"));
+    		pt.setParent(term.getJSONObject("_links").getJSONObject("parents").getString("href"));
+    		pt.setSynonym(term.getString("label"));
+
+    		pr.save(pt);
+    	}
 		
 	}
 

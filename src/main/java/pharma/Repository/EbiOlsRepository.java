@@ -3,6 +3,7 @@ package pharma.Repository;
 import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 
+import pharma.Term.AbstractTerm;
 import pharma.Term.EbiOlsTerm;
 
 import org.springframework.data.jpa.repository.Query;

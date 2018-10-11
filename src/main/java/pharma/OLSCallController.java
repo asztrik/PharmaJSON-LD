@@ -13,7 +13,9 @@ import pharma.Connector.OboNcitConnector;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Repository.OboNcitRepository;
+import pharma.Term.AbstractTerm;
 import pharma.Term.EbiOlsTerm;
+import pharma.Term.OboNcitTerm;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,6 +35,8 @@ public class OLSCallController {
 	
 	@Autowired
 	private EbiOlsRepository pr;
+	
+	@Autowired
 	private OboNcitRepository nr;
 	
 	private EbiOlsConnector eoc;
@@ -64,12 +68,14 @@ public class OLSCallController {
     	
 		// Query and store all EBI OLS terms...
 		eoc = new EbiOlsConnector("GO:0043226", pr);
-		ncc = new OboNcitConnector("NCIT_C19160", nr);
+		ncc = new OboNcitConnector("GO:0044834", nr);
 		
 		try {
 			eoc.queryAndStoreOLS();
+			ncc.queryAndStoreOLS();
 			eoc = new EbiOlsConnector("GO:0043231", pr);
 			eoc.queryAndStoreOLS();
+			ncc = new OboNcitConnector("GO:0044834", nr);
 			
 			//...
 			ncc.queryAndStoreOLS();
@@ -141,18 +147,36 @@ public class OLSCallController {
      * @return
      */
 	@RequestMapping("/suggest")
-    public String suggest(@RequestParam(value="label", defaultValue="extra") String label) {      
+    public String suggest(
+    		@RequestParam(value="label", defaultValue="extra") String label,
+    		@RequestParam(value="ontology", defaultValue="go") String ontology) {      
 		
 		//Add JSON wrapper (same for one OLS) -- how to handle different OLS-es here??
     	String returnstring = "{\"@context\": { \"GOCellComp\": \"http://purl.obolibrary.org/obo/GO_0005575\" }," + 
     			"\""+label+"\": [ ";
+	
+    	
+    	switch(ontology) {
+    	case "go":
+    		List<EbiOlsTerm> labelsGo;
+    		labelsGo = pr.findBySynonym(label);
+    		for (Iterator<EbiOlsTerm> i = labelsGo.iterator(); i.hasNext();) {
+    			EbiOlsTerm item = i.next();
+    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
+    			returnstring = returnstring + ",";
+    		}     		
+    		break;
+    	case "ncit": 
+    		List<OboNcitTerm> labelsNcit;
+    		labelsNcit = nr.findBySynonym(label);
+    		for (Iterator<OboNcitTerm> i = labelsNcit.iterator(); i.hasNext();) {
+    			OboNcitTerm item = i.next();
+    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
+    			returnstring = returnstring + ",";
+    		}     		
+    		break;
+    	}
 		
-		List<EbiOlsTerm> labels = pr.findBySynonym(label);
-		for (Iterator<EbiOlsTerm> i = labels.iterator(); i.hasNext();) {
-			EbiOlsTerm item = i.next();
-			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-			returnstring = returnstring + ",";
-		} 
     	
 		// remove last comma
 		returnstring = returnstring.substring(0, returnstring.length()-1);
