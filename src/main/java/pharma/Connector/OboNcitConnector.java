@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -68,7 +70,7 @@ public class OboNcitConnector implements ExternalServiceConnector {
 	}
 	
 	@Override
-	public void queryAndStoreOLS() throws ExternalServiceConnectorException {
+	public HashMap<String, String> queryAndStoreOLS() throws ExternalServiceConnectorException {
 		
 		// raw JSON
 		JSONObject json = null;
@@ -113,11 +115,13 @@ public class OboNcitConnector implements ExternalServiceConnector {
     		// Create Entity that will be persisted
     		OboNcitTerm pt = new OboNcitTerm();
     		pt.setIri(term.getString("iri"));
-    		pt.setParent(term.getJSONObject("_links").getJSONObject("parents").getString("href"));
+    		//pt.setParent(term.getJSONObject("_links").getJSONObject("parents").getString("href"));
     		pt.setSynonym(term.getString("label"));
 
     		pr.save(pt);
     	}
+    	
+    	return null;
 		
 	}
 

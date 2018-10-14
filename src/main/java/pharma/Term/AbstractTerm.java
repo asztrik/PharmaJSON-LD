@@ -1,5 +1,7 @@
 package pharma.Term;
 
+import java.util.Collection;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -22,7 +24,6 @@ public abstract class AbstractTerm {
 
 	protected String synonym;
 	
-	protected String parent;
 
 	// All the Terms need a method that converts them to a JSON
 	// But the exact format / content depends on the FE fields...
@@ -62,13 +63,6 @@ public abstract class AbstractTerm {
 		this.synonym = synonym;
 	}
 
-	public String getParent() {
-		return parent;
-	}
-
-	public void setParent(String parent) {
-		this.parent = parent;
-	}
 	
 
 	

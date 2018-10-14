@@ -17,5 +17,5 @@ public interface OboNcitRepository extends CrudRepository<OboNcitTerm, Long> {
 		List<OboNcitTerm> findBySynonym(String synonym);
 		
 		/* NOT Final how the parents are identified...*/
-		List<OboNcitTerm> findByParent(String parent);	
+		//List<OboNcitTerm> findByParent(String parent);	
 }

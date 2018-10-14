@@ -3,9 +3,14 @@ package pharma.Connector;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -66,77 +71,129 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 	public void setIri(String iri) {
 		this.iri = iri;
 	}
-
-	@Override
-	public void queryAndStoreOLS() throws ExternalServiceConnectorException {
+	
+	/**
+	 * Connects to the url set for this class and retrieves all the terms to one IRI as JSONArray
+	 * @return
+	 * @throws ExternalServiceConnectorException
+	 */
+	private JSONArray connectAndGetJSON() throws ExternalServiceConnectorException {
 		
-		if(this.iri.isEmpty() || this.iri == null) {
-				throw new ExternalServiceConnectorException("Iri is not set, the OLS would give 404");	
-		}
-
-		// raw JSON
-		JSONObject json = null;
-		
-    	// Inner array under "_embedded"
-    	//JSONArray pharmaArray = new JSONArray();
+		System.out.println("URL called " + url);
 		
 		try {
-			if (this.conn.getResponseCode() != 200) {
+			conn = (HttpURLConnection) this.url.openConnection();
+			conn.setRequestMethod("GET");
+			conn.setRequestProperty("Accept", "application/json");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		JSONObject json = null;
+		
+		try {
+			if (conn.getResponseCode() != 200) {
 			    throw new RuntimeException("Failed : HTTP error code : "
-			        + this.conn.getResponseCode());
-			    }
-
-
+			        + conn.getResponseCode());
+			    }		
 	        StringBuilder sb = new StringBuilder();        
-	        
-	        String line;
-
-	        
+	        String line;       
 	        BufferedReader br = new BufferedReader(new InputStreamReader(
 	                (this.conn.getInputStream())));
 	        while ((line = br.readLine()) != null) {
 	            sb.append(line);
 	        }        
 	        
-	       
 	        if(sb.toString().isEmpty())
-	        	throw new ExternalServiceConnectorException("Empty response from EbiOLS " + this.conn.getURL());	
+	        	throw new ExternalServiceConnectorException("Empty response from " + conn.getURL());	
 	        	
 	        json = new JSONObject(sb.toString());
-
+	        
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		
-		// All the terms for one query as array
-    	JSONArray terms = json.getJSONObject("_embedded").getJSONArray("terms");
+    	return json.getJSONObject("_embedded").getJSONArray("terms");		
+	}
+	
+	
+	/**
+	 * Gets only the parents of a term as a list
+	 * @param url
+	 * @return
+	 * @throws ExternalServiceConnectorException
+	 */
+	public void getParentByURL(String url, String childIri) throws ExternalServiceConnectorException {
+		
+		
+		System.out.println("Parent called " + url + " for " + childIri);
+
+		
+		try {
+			this.url = new URL(url);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		JSONArray terms = connectAndGetJSON();
+		
+		List<EbiOlsTerm> parentList = new ArrayList<EbiOlsTerm>();
+		
     	
     	// get the terms one by one
     	for (int i=0; i < terms.length(); i++) {
     		JSONObject term = terms.getJSONObject(i);
     		
-    		// Create a JSON directly (testing)
-    		//JSONObject pharmaTerm = new JSONObject();
-    		//	pharmaTerm.put("skos:exactMatch", term.getString("iri"));
-    		//	pharmaTerm.put("skos:prefLabel", term.getString("label"));
-    		//	// gives error when null...
-    		//	//pharmaTerm.put("rdfs:label", term.getString("synonyms"));
-    		//	pharmaTerm.put("skos:broader", term.getJSONObject("_links").getJSONObject("parents").getString("href"));
-    		//pharmaArray.put(pharmaTerm);
-    		
+    		// At this moment there are no parents to be found, need to do the linking later!!!
+    		List<EbiOlsTerm> child = this.pr.findByIri(childIri);
+    		if(!child.isEmpty()) {
+    			List<EbiOlsTerm> parent = this.pr.findByIri(term.getString("iri"));
+    			if(!parent.isEmpty()) {
+    				child.get(0).setParent(parent);
+    			}
+    		}
+    	}
+	
+	}
+
+	/**
+	 * Connects to the URL set and gets the terms as JSON, also sets the parents
+	 * Returns a dictionary with the links to the parents of the terms.
+	 * How the Dict looks like:
+	 * [TermIri] --> [ParentLink]
+	 * Both unique.
+	 */
+	@Override
+	public HashMap<String, String> queryAndStoreOLS() throws ExternalServiceConnectorException {
+		
+		if(this.iri.isEmpty() || this.iri == null) {
+				throw new ExternalServiceConnectorException("Iri is not set, the OLS would give 404");	
+		}
+	
+		// All the terms for one query as array
+    	JSONArray terms = connectAndGetJSON();
+    	
+    	HashMap<String, String> parentLinkList = new HashMap<String, String>();
+    	
+    	// get the terms one by one
+    	for (int i=0; i < terms.length(); i++) {
+    		JSONObject term = terms.getJSONObject(i);
     		
     		// Create Entity that will be persisted
     		EbiOlsTerm pt = new EbiOlsTerm();
     		pt.setIri(term.getString("iri"));
-    		pt.setParent(term.getJSONObject("_links").getJSONObject("parents").getString("href"));
+    		
+    		parentLinkList.put( term.getString("iri"), term.getJSONObject("_links").getJSONObject("parents").getString("href"));
+    		
     		pt.setSynonym(term.getString("label"));
 
     		pr.save(pt);
   
     		
     	}
+    	
+    	return parentLinkList;
     
 	}
 	

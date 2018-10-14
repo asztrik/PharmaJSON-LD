@@ -2,6 +2,8 @@ package pharma;
 
 
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -67,27 +69,39 @@ public class OLSCallController {
     public String update() {
     	
 		// Query and store all EBI OLS terms...
-		eoc = new EbiOlsConnector("GO:0043226", pr);
-		ncc = new OboNcitConnector("GO:0044834", nr);
+		
+		
+		/* [TermIri] --> [ParentLink] */
+		HashMap<String, String> urlsOfParents = new HashMap<String, String>();
 		
 		try {
-			eoc.queryAndStoreOLS();
-			ncc.queryAndStoreOLS();
+			/* now always concatenate the baselist with the returns of query&store */
+			eoc = new EbiOlsConnector("GO:0043226", pr);
+			urlsOfParents.putAll(eoc.queryAndStoreOLS());
 			eoc = new EbiOlsConnector("GO:0043231", pr);
-			eoc.queryAndStoreOLS();
-			ncc = new OboNcitConnector("GO:0044834", nr);
-			
+			urlsOfParents.putAll(eoc.queryAndStoreOLS());
 			//...
-			ncc.queryAndStoreOLS();
 			
+			
+			for(Entry<String, String> entry : urlsOfParents.entrySet()) {
+				eoc.getParentByURL(entry.getValue(), entry.getKey());
+			}
+
 		} catch (ExternalServiceConnectorException e) {
 
 			e.printStackTrace();
 		}
 		
-		// Query and store all Cellosaurus terms...
-		
-		
+		// Query and store all OboNcit terms...
+		try {		
+			ncc = new OboNcitConnector("GO:0044834", nr);
+			ncc.queryAndStoreOLS();
+			ncc = new OboNcitConnector("GO:0044834", nr);
+			ncc.queryAndStoreOLS();
+		} catch (ExternalServiceConnectorException e) {
+	
+			e.printStackTrace();
+		}		
 		// Report Success.
 		return "{ \"updateStatus\": \"success\"}";
     }	
