@@ -3,6 +3,7 @@ package pharma.Term;
 import java.util.Collection;
 import java.util.List;
 
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -18,9 +19,6 @@ public class EbiOlsTerm extends AbstractTerm {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Integer id;
 	
-    @OneToMany(mappedBy="iri")
-    protected Collection<EbiOlsTerm> parent;	
-	
 	public JSONObject toJSON () {
 		
 		JSONObject output = new JSONObject(
@@ -35,9 +33,7 @@ public class EbiOlsTerm extends AbstractTerm {
 		
 	}
 
-	public void setParent(Collection<EbiOlsTerm> parentlist) {
-		this.parent = parentlist;
-	}
+
 	
 	
 }

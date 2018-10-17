@@ -11,14 +11,14 @@ import org.springframework.data.jpa.repository.Query;
 // This will be AUTO IMPLEMENTED by Spring into a Bean called userRepository
 // CRUD refers Create, Read, Update, Delete
 
-public interface EbiOlsRepository extends CrudRepository<EbiOlsTerm, Long> {
+public interface EbiOlsRepository extends CrudRepository<AbstractTerm, Long> {
 
-	List<EbiOlsTerm> findByIri(String iri);
+	List<AbstractTerm> findByIri(String iri);
 	
 	/* NOT synonym, its the label, temporary solution! */
 	@Query("SELECT p FROM EbiOlsTerm p WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%'))")
-	List<EbiOlsTerm> findBySynonym(String synonym);
+	List<AbstractTerm> findBySynonym(String synonym);
 	
 	/* NOT Final how the parents are identified...*/
-	List<EbiOlsTerm> findByParent(String parent);	
+	List<AbstractTerm> findByParent(String parent);	
 }

@@ -146,11 +146,11 @@ public class EbiOlsConnector implements ExternalServiceConnector {
     		JSONObject term = terms.getJSONObject(i);
     		
     		// At this moment there are no parents to be found, need to do the linking later!!!
-    		List<EbiOlsTerm> child = this.pr.findByIri(childIri);
+    		List<AbstractTerm> child = this.pr.findByIri(childIri);
     		if(!child.isEmpty()) {
-    			List<EbiOlsTerm> parent = this.pr.findByIri(term.getString("iri"));
+    			List<AbstractTerm> parent = this.pr.findByIri(term.getString("iri"));
     			if(!parent.isEmpty()) {
-    				child.get(0).setParent(parent);
+    				child.get(0).setParent(parent.get(0));
     			}
     		}
     	}

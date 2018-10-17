@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import pharma.Repository.EbiOlsRepository;
 import pharma.Repository.OboNcitRepository;
+import pharma.Term.AbstractTerm;
 import pharma.Term.EbiOlsTerm;
 import pharma.Term.OboNcitTerm;
 
@@ -50,7 +51,7 @@ public class StorageController {
 	}	
 	
 	@GetMapping(path="/allEbiOls")
-	public @ResponseBody Iterable<EbiOlsTerm> getAllEbiOls() {
+	public @ResponseBody Iterable<AbstractTerm> getAllEbiOls() {
 		// This returns a JSON or XML with the users
 		return pharmaRepository.findAll();
 	}

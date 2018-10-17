@@ -140,9 +140,9 @@ public class OLSCallController {
     	
     	String retrunstring = "WIP...";
 		
-		List<EbiOlsTerm> children = pr.findByParent(parent);
-		for (Iterator<EbiOlsTerm> i = children.iterator(); i.hasNext();) {
-			EbiOlsTerm item = i.next();
+		List<AbstractTerm> children = pr.findByParent(parent);
+		for (Iterator<AbstractTerm> i = children.iterator(); i.hasNext();) {
+			AbstractTerm item = i.next();
 			retrunstring = retrunstring + System.lineSeparator() + item.toJSON().toString();
 		} 
     	
@@ -172,10 +172,10 @@ public class OLSCallController {
     	
     	switch(ontology) {
     	case "go":
-    		List<EbiOlsTerm> labelsGo;
+    		List<AbstractTerm> labelsGo;
     		labelsGo = pr.findBySynonym(label);
-    		for (Iterator<EbiOlsTerm> i = labelsGo.iterator(); i.hasNext();) {
-    			EbiOlsTerm item = i.next();
+    		for (Iterator<AbstractTerm> i = labelsGo.iterator(); i.hasNext();) {
+    			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
     			returnstring = returnstring + ",";
     		}     		

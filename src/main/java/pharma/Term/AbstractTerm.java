@@ -2,14 +2,25 @@ package pharma.Term;
 
 import java.util.Collection;
 
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.OneToMany;
 
 import org.json.JSONObject;
 
-@MappedSuperclass
+//@MappedSuperclass
+@Entity
+@Inheritance(strategy=InheritanceType.SINGLE_TABLE)
 public abstract class AbstractTerm {
 	
 	// An Id is needed for the Persistence API
@@ -24,7 +35,10 @@ public abstract class AbstractTerm {
 
 	protected String synonym;
 	
-
+    @ManyToOne(targetEntity = AbstractTerm.class, optional=true)
+    @JoinColumn(name="PARENT_ID", nullable=true)
+    protected /*Collection<*/AbstractTerm/*>*/ parent;
+	
 	// All the Terms need a method that converts them to a JSON
 	// But the exact format / content depends on the FE fields...
 	public abstract JSONObject toJSON();
@@ -63,7 +77,9 @@ public abstract class AbstractTerm {
 		this.synonym = synonym;
 	}
 
-	
+	public void setParent(/*Collection<*/AbstractTerm/*>*/ parentlist) {
+		this.parent = parentlist;
+	}
 
 	
 }
