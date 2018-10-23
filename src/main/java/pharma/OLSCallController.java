@@ -75,15 +75,21 @@ public class OLSCallController {
 		HashMap<String, String> urlsOfParents = new HashMap<String, String>();
 		
 		try {
+			
+			// #ERROR the 2 parents themselves are NEVER listed as terms and NOT persisted! 
+			
 			/* now always concatenate the baselist with the returns of query&store */
+			eoc = new EbiOlsConnector("GO:0005575", pr); // parent of 0043226
+			urlsOfParents.putAll(eoc.queryAndStoreOLS());
 			eoc = new EbiOlsConnector("GO:0043226", pr);
 			urlsOfParents.putAll(eoc.queryAndStoreOLS());
-			eoc = new EbiOlsConnector("GO:0043231", pr);
-			urlsOfParents.putAll(eoc.queryAndStoreOLS());
+			//eoc = new EbiOlsConnector("GO:0043231", pr);
+			//urlsOfParents.putAll(eoc.queryAndStoreOLS());
 			//...
 			
 			
 			for(Entry<String, String> entry : urlsOfParents.entrySet()) {
+				System.out.println("getParentByURL: "+entry.getValue()+" - "+entry.getKey());
 				eoc.getParentByURL(entry.getValue(), entry.getKey());
 			}
 
@@ -93,15 +99,15 @@ public class OLSCallController {
 		}
 		
 		// Query and store all OboNcit terms...
-		try {		
-			ncc = new OboNcitConnector("GO:0044834", nr);
-			ncc.queryAndStoreOLS();
-			ncc = new OboNcitConnector("GO:0044834", nr);
-			ncc.queryAndStoreOLS();
-		} catch (ExternalServiceConnectorException e) {
-	
-			e.printStackTrace();
-		}		
+//		try {		
+//			ncc = new OboNcitConnector("GO:0044834", nr);
+//			ncc.queryAndStoreOLS();
+//			ncc = new OboNcitConnector("GO:0044834", nr);
+//			ncc.queryAndStoreOLS();
+//		} catch (ExternalServiceConnectorException e) {
+//	
+//			e.printStackTrace();
+//		}		
 		// Report Success.
 		return "{ \"updateStatus\": \"success\"}";
     }	

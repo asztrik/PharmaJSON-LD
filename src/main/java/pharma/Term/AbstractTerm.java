@@ -37,7 +37,7 @@ public abstract class AbstractTerm {
 	
     @ManyToOne(targetEntity = AbstractTerm.class, optional=true)
     @JoinColumn(name="PARENT_ID", nullable=true)
-    protected /*Collection<*/AbstractTerm/*>*/ parent;
+    protected AbstractTerm parent;
 	
 	// All the Terms need a method that converts them to a JSON
 	// But the exact format / content depends on the FE fields...
@@ -77,7 +77,7 @@ public abstract class AbstractTerm {
 		this.synonym = synonym;
 	}
 
-	public void setParent(/*Collection<*/AbstractTerm/*>*/ parentlist) {
+	public void setParent(AbstractTerm parentlist) {
 		this.parent = parentlist;
 	}
 
