@@ -16,7 +16,6 @@ import pharma.Exception.ExternalServiceConnectorException;
 
 import pharma.Repository.OboNcitRepository;
 import pharma.Term.AbstractTerm;
-import pharma.Term.EbiOlsTerm;
 import pharma.Term.OboNcitTerm;
 
 public class OboNcitConnector implements ExternalServiceConnector {
@@ -37,6 +36,8 @@ public class OboNcitConnector implements ExternalServiceConnector {
 		this.conn = conn;
 		this.pr = eor;
 	}
+		
+
 	
 	public OboNcitConnector(String iri, OboNcitRepository eor) {
 		
@@ -69,59 +70,119 @@ public class OboNcitConnector implements ExternalServiceConnector {
 		this.iri = iri;
 	}
 	
-	@Override
-	public HashMap<String, String> queryAndStoreOLS() throws ExternalServiceConnectorException {
+	/**
+	 * Connects to the url set for this class and retrieves all the terms to one IRI as JSONArray
+	 * @return
+	 * @throws ExternalServiceConnectorException
+	 */
+	private JSONArray connectAndGetJSON() throws ExternalServiceConnectorException {
 		
-		// raw JSON
-		JSONObject json = null;
+		System.out.println("URL called " + url);
 		
 		try {
-			if (this.conn.getResponseCode() != 200) {
-			    throw new RuntimeException("Failed : HTTP error code : "
-			        + this.conn.getResponseCode() + " with URL " + this.conn.getURL());
-			    }
-
-
-	        StringBuilder sb = new StringBuilder();        
-	        
-	        String line;
-
-	        
-	        BufferedReader br = new BufferedReader(new InputStreamReader(
-	                (this.conn.getInputStream())));
-	        while ((line = br.readLine()) != null) {
-	        	System.out.println(line);
-	            sb.append(line);
-	        }        
-	        
-	       
-	        if(sb.toString().isEmpty())
-	        	throw new ExternalServiceConnectorException("Empty response from OboNcit while querying " + this.conn.getURL());	
-	        	
-	        json = new JSONObject(sb.toString());
-
+			conn = (HttpURLConnection) this.url.openConnection();
+			conn.setRequestMethod("GET");
+			conn.setRequestProperty("Accept", "application/json");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
+		JSONObject json = null;
+		
+		try {
+			if (conn.getResponseCode() != 200) {
+			    throw new RuntimeException("Failed : HTTP error code : "
+			        + conn.getResponseCode());
+			    }		
+	        StringBuilder sb = new StringBuilder();        
+	        String line;       
+	        BufferedReader br = new BufferedReader(new InputStreamReader(
+	                (this.conn.getInputStream())));
+	        while ((line = br.readLine()) != null) {
+	            sb.append(line);
+	        }        
+	        
+	        if(sb.toString().isEmpty())
+	        	throw new ExternalServiceConnectorException("Empty response from " + conn.getURL());	
+	        	
+	        json = new JSONObject(sb.toString());
+	        
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+    	return json.getJSONObject("_embedded").getJSONArray("terms");		
+	}		
+	
+	/**
+	 * Gets only the parents of a term as a list
+	 * @param url
+	 * @return
+	 * @throws ExternalServiceConnectorException
+	 */
+	public void getParentByURL(String url, String childIri) throws ExternalServiceConnectorException {
+		
+		try {
+			this.url = new URL(url);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+		
+		JSONArray terms = connectAndGetJSON();
+
+    	// get the terms one by one
+    	for (int i=0; i < terms.length(); i++) {
+    		JSONObject term = terms.getJSONObject(i);
+    		
+    		// At this moment there are no parents to be found, need to do the linking later!!!
+    		List<AbstractTerm> child = this.pr.findByIri(childIri);
+    		if(!child.isEmpty()) {
+    			System.out.println("Child: " + child.get(0).getIri() + " - " + child.get(0).toString());
+    			System.out.println("Term: " + term.getString("iri"));
+    			List<AbstractTerm> parent = this.pr.findByIri(term.getString("iri"));
+    			if(!parent.isEmpty()) {
+    				System.out.println("Parent: " + parent.get(0).getIri());
+    				child.get(0).setParent(parent.get(0));
+    				pr.save(child.get(0));
+    			}
+    		}
+    	}
+	
+	}	
+	
+	@Override
+	public HashMap<String, String> queryAndStoreOLS() throws ExternalServiceConnectorException {
+		
+		if(this.iri.isEmpty() || this.iri == null) {
+				throw new ExternalServiceConnectorException("Iri is not set, the OLS would give 404");	
+		}
+	
 		// All the terms for one query as array
-    	JSONArray terms = json.getJSONObject("_embedded").getJSONArray("terms");
+    	JSONArray terms = connectAndGetJSON();
+    	
+    	HashMap<String, String> parentLinkList = new HashMap<String, String>();
     	
     	// get the terms one by one
     	for (int i=0; i < terms.length(); i++) {
     		JSONObject term = terms.getJSONObject(i);
-   		
+    		
     		// Create Entity that will be persisted
     		OboNcitTerm pt = new OboNcitTerm();
     		pt.setIri(term.getString("iri"));
-    		//pt.setParent(term.getJSONObject("_links").getJSONObject("parents").getString("href"));
+    		
+    		parentLinkList.put( term.getString("iri"), term.getJSONObject("_links").getJSONObject("parents").getString("href"));
+    		
+    		System.out.println(term.getString("iri") + " saved.");
+    		
     		pt.setSynonym(term.getString("label"));
 
     		pr.save(pt);
+  
+    		
     	}
     	
-    	return null;
+    	return parentLinkList;
 		
 	}
 

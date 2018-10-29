@@ -6,16 +6,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import pharma.Term.AbstractTerm;
-import pharma.Term.OboNcitTerm;
 
-public interface OboNcitRepository extends CrudRepository<OboNcitTerm, Long> {
-
-		List<OboNcitTerm> findByIri(String iri);
+public interface OboNcitRepository extends CrudRepository<AbstractTerm, Long> {
+	
+		@Query("SELECT p FROM AbstractTerm p WHERE p.iri LIKE LOWER(CONCAT('%',:iri, '%')) AND dtype LIKE 'OboNcitTerm'")
+		List<AbstractTerm> findByIri(String iri);
 		
-		/* NOT synonym, its the label, temporary solution! */
-		@Query("SELECT p FROM OboNcitTerm p WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%'))")
-		List<OboNcitTerm> findBySynonym(String synonym);
+		@Query("SELECT p FROM AbstractTerm p WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%')) AND dtype LIKE 'OboNcitTerm'")
+		List<AbstractTerm> findBySynonym(String synonym);
 		
-		/* NOT Final how the parents are identified...*/
-		//List<OboNcitTerm> findByParent(String parent);	
+		@Query("SELECT p FROM AbstractTerm p WHERE p.parent = parent AND dtype LIKE 'OboNcitTerm'")
+		List<AbstractTerm> findByParent(Integer parent);	
 }

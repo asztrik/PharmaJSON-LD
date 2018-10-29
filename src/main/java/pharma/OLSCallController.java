@@ -16,8 +16,6 @@ import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Repository.OboNcitRepository;
 import pharma.Term.AbstractTerm;
-import pharma.Term.EbiOlsTerm;
-import pharma.Term.OboNcitTerm;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -72,42 +70,38 @@ public class OLSCallController {
 		
 		
 		/* [TermIri] --> [ParentLink] */
-		HashMap<String, String> urlsOfParents = new HashMap<String, String>();
+		HashMap<String, String> urlsOfEbiOlsParents = new HashMap<String, String>();
+		HashMap<String, String> urlsOfOboNcitParents = new HashMap<String, String>();
 		
 		try {
 			
-			// #ERROR the 2 parents themselves are NEVER listed as terms and NOT persisted! 
-			
 			/* now always concatenate the baselist with the returns of query&store */
 			eoc = new EbiOlsConnector("GO:0005575", pr); // parent of 0043226
-			urlsOfParents.putAll(eoc.queryAndStoreOLS());
+			urlsOfEbiOlsParents.putAll(eoc.queryAndStoreOLS());
 			eoc = new EbiOlsConnector("GO:0043226", pr);
-			urlsOfParents.putAll(eoc.queryAndStoreOLS());
-			//eoc = new EbiOlsConnector("GO:0043231", pr);
-			//urlsOfParents.putAll(eoc.queryAndStoreOLS());
-			//...
+			urlsOfEbiOlsParents.putAll(eoc.queryAndStoreOLS());
 			
 			
-			for(Entry<String, String> entry : urlsOfParents.entrySet()) {
+			ncc = new OboNcitConnector("NCIT:C60743", nr);
+			urlsOfOboNcitParents .putAll(ncc.queryAndStoreOLS());
+	
+		
+			for(Entry<String, String> entry : urlsOfEbiOlsParents.entrySet()) {
 				System.out.println("getParentByURL: "+entry.getValue()+" - "+entry.getKey());
 				eoc.getParentByURL(entry.getValue(), entry.getKey());
 			}
 
+			for(Entry<String, String> entry : urlsOfOboNcitParents.entrySet()) {
+				System.out.println("getParentByURL: "+entry.getValue()+" - "+entry.getKey());
+				ncc.getParentByURL(entry.getValue(), entry.getKey());
+			}
+			
+			
+		
 		} catch (ExternalServiceConnectorException e) {
 
 			e.printStackTrace();
 		}
-		
-		// Query and store all OboNcit terms...
-//		try {		
-//			ncc = new OboNcitConnector("GO:0044834", nr);
-//			ncc.queryAndStoreOLS();
-//			ncc = new OboNcitConnector("GO:0044834", nr);
-//			ncc.queryAndStoreOLS();
-//		} catch (ExternalServiceConnectorException e) {
-//	
-//			e.printStackTrace();
-//		}		
 		// Report Success.
 		return "{ \"updateStatus\": \"success\"}";
     }	
@@ -141,17 +135,42 @@ public class OLSCallController {
 	 * @return
 	 */
     @RequestMapping("/getchildren")
-    public String getChildren(@RequestParam(value="parent", defaultValue="GO:0043226") String parent) {
+    public String getChildren(@RequestParam(value="parent", defaultValue="C60743") String parent) {
  	
     	
-    	String retrunstring = "WIP...";
+    	String retrunstring = "";
 		
-		List<AbstractTerm> children = pr.findByParent(parent);
-		for (Iterator<AbstractTerm> i = children.iterator(); i.hasNext();) {
+    	List<AbstractTerm> parents = pr.findByIri(parent);
+		
+    	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
 			AbstractTerm item = i.next();
-			retrunstring = retrunstring + System.lineSeparator() + item.toJSON().toString();
+			List<AbstractTerm> parent_ids = pr.findByParent(item.getId());
+			
+			if(!parent_ids.isEmpty()) {
+				System.out.println(parent_ids.get(0).getIri());
+		    	for (Iterator<AbstractTerm> j = parent_ids.iterator(); j.hasNext();) {
+		    		AbstractTerm child = j.next();
+		    		retrunstring = retrunstring + System.lineSeparator() + child.toJSON().toString();
+		    	}	
+			}
 		} 
+    	   	
     	
+    	
+    	parents = nr.findByIri(parent);
+		
+    	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
+			AbstractTerm item = i.next();
+			List<AbstractTerm> parent_ids = nr.findByParent(item.getId());
+			
+			if(!parent_ids.isEmpty()) {
+				System.out.println(parent_ids.get(0).getIri());
+		    	for (Iterator<AbstractTerm> j = parent_ids.iterator(); j.hasNext();) {
+		    		AbstractTerm child = j.next();
+		    		retrunstring = retrunstring + System.lineSeparator() + child.toJSON().toString();
+		    	}	
+			}
+		} 
     	
     	return retrunstring;
 
@@ -187,10 +206,10 @@ public class OLSCallController {
     		}     		
     		break;
     	case "ncit": 
-    		List<OboNcitTerm> labelsNcit;
+    		List<AbstractTerm> labelsNcit;
     		labelsNcit = nr.findBySynonym(label);
-    		for (Iterator<OboNcitTerm> i = labelsNcit.iterator(); i.hasNext();) {
-    			OboNcitTerm item = i.next();
+    		for (Iterator<AbstractTerm> i = labelsNcit.iterator(); i.hasNext();) {
+    			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
     			returnstring = returnstring + ",";
     		}     		

@@ -57,7 +57,7 @@ public class StorageController {
 	}
 	
 	@GetMapping(path="/allOboNcit")
-	public @ResponseBody Iterable<OboNcitTerm> getAllOboncit() {
+	public @ResponseBody Iterable<AbstractTerm> getAllOboncit() {
 		// This returns a JSON or XML with the users
 		return oboncitRepository.findAll();
 	}	

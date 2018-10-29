@@ -3,12 +3,9 @@ package pharma.Connector;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -126,10 +123,6 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 	 */
 	public void getParentByURL(String url, String childIri) throws ExternalServiceConnectorException {
 		
-		
-		
-
-		
 		try {
 			this.url = new URL(url);
 		} catch (MalformedURLException e) {
@@ -137,9 +130,6 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 		}
 		
 		JSONArray terms = connectAndGetJSON();
-		
-		List<EbiOlsTerm> parentList = new ArrayList<EbiOlsTerm>();
-		
     	
     	// get the terms one by one
     	for (int i=0; i < terms.length(); i++) {
