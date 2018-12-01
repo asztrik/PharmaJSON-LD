@@ -3,7 +3,9 @@ package pharma;
 
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -155,41 +157,68 @@ public class OLSCallController {
     public String getChildren(@RequestParam(value="parent", defaultValue="C60743") String parent) {
  	
     	
-    	String retrunstring = "";
-		
-    	List<AbstractTerm> parents = ebiOlsRepo.findByIri(parent);
-		
-    	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
-			AbstractTerm item = i.next();
-			List<AbstractTerm> parent_ids = ebiOlsRepo.findByParent(item.getId());
-			
-			if(!parent_ids.isEmpty()) {
-				System.out.println(parent_ids.get(0).getIri());
-		    	for (Iterator<AbstractTerm> j = parent_ids.iterator(); j.hasNext();) {
-		    		AbstractTerm child = j.next();
-		    		retrunstring = retrunstring + System.lineSeparator() + child.toJSON().toString();
-		    	}	
-			}
-		} 
-    	   	
     	
     	
-    	parents = oboNcitRepo.findByIri(parent);
-		
-    	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
-			AbstractTerm item = i.next();
-			List<AbstractTerm> parent_ids = oboNcitRepo.findByParent(item.getId());
-			
-			if(!parent_ids.isEmpty()) {
-				System.out.println(parent_ids.get(0).getIri());
-		    	for (Iterator<AbstractTerm> j = parent_ids.iterator(); j.hasNext();) {
-		    		AbstractTerm child = j.next();
-		    		retrunstring = retrunstring + System.lineSeparator() + child.toJSON().toString();
-		    	}	
-			}
-		} 
+    	return "Not yet..";
     	
-    	return retrunstring;
+    	// Every term is comin multiple times: todo: rewrite univesally!
+//    	String returnstring = "{ \"getChildrenResult\": [ "; 
+//    			
+//    	List<AbstractTerm> parents = ebiOlsRepo.findByIri(parent);
+//    	
+//		Set<AbstractTerm> hsp = new HashSet<AbstractTerm>();
+//		hsp.addAll(parents);
+//		parents.clear();
+//		parents.addAll(hsp);
+//    	
+//		
+//    	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
+//			AbstractTerm item = i.next();
+//			List<AbstractTerm> parent_ids = ebiOlsRepo.findByParent(item.getId());
+//			
+//			if(!parent_ids.isEmpty()) {
+//				System.out.println(parent_ids.get(0).getIri());
+//		    	for (Iterator<AbstractTerm> j = parent_ids.iterator(); j.hasNext();) {
+//		    		AbstractTerm child = j.next();
+//		    		returnstring = returnstring + child.toJSON().toString();
+//		    		if(j.hasNext())
+//		    			returnstring = returnstring + ",";
+//		    	}	
+//			}
+//		} 
+//    	   	
+//    	
+//    	
+//    	parents = oboNcitRepo.findByIri(parent);
+//    	
+//    	hsp = new HashSet<AbstractTerm>();
+//		hsp.addAll(parents);
+//		parents.clear();
+//		parents.addAll(hsp);
+//		
+//    	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
+//			AbstractTerm item = i.next();
+//			List<AbstractTerm> parent_ids = oboNcitRepo.findByParent(item.getId());
+//			
+//			Set<AbstractTerm> hs = new HashSet<AbstractTerm>();
+//			hs.addAll(parent_ids);
+//			parent_ids.clear();
+//			parent_ids.addAll(hs);
+//			
+//			if(!parent_ids.isEmpty()) {
+//				System.out.println(parent_ids.get(0).getIri());
+//		    	for (Iterator<AbstractTerm> j = parent_ids.iterator(); j.hasNext();) {
+//		    		AbstractTerm child = j.next();
+//		    		returnstring = returnstring + child.toJSON().toString();
+//		    		if(j.hasNext())
+//		    			returnstring = returnstring + ",";
+//		    	}	
+//			}
+//		} 
+//    	
+//    	returnstring = returnstring + "] }";
+//    	
+//    	return returnstring;
 
     }
 	

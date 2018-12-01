@@ -18,9 +18,9 @@ public class EbiOlsTerm extends AbstractTerm {
 		
 		JSONObject output = new JSONObject(
 				"{ \"@type\":\"skos:Concept\","
-				+ "\"skos:prefLabel\": [ { \"@value\": \""+this.synonym+"\", "
+				+ "\"skos:prefLabel\": [ { \"@value\": "+this.synonym+", "
 				+ "\"@language\":\"eng\"} ], \"rdfs:label\":[ { \"@value\": " 
-				+ "\"" +this.synonym+"\", \"@language\":\"eng\" } ],"
+				+ this.synonym+", \"@language\":\"eng\" } ],"
 				+ "\"skos:exactMatch\":\""+this.iri+"\"} "
 				);
 		

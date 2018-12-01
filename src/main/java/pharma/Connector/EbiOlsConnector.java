@@ -193,20 +193,21 @@ public class EbiOlsConnector implements ExternalServiceConnector {
     		
     		System.out.println(term.getString("iri") + " saved.");
     		
-    		pt.setSynonym(term.getString("label"));
-
+    		String labelString = "[ " + "\"" + term.getString("label") + "\"";
+    		
     		try {
 	    		JSONArray synonymsObj = term.getJSONArray("synonyms");
 	    		
-	    		System.out.println("+++ SYNONYMS FOUND: +++");
 	    		for(int j=0; j<synonymsObj.length(); j++) {
-	    			System.out.println(synonymsObj.get(j));
+	    			labelString = labelString + ",\""+synonymsObj.get(j)+ "\"";
 	    		}
     		} catch (JSONException jse) {
     			// Do nothing, it's normal...
     		}
     		
-
+    		labelString = labelString + " ]";
+    		
+    		pt.setSynonym(labelString);
 		
     		ebiOlsRepo.save(pt);
   
