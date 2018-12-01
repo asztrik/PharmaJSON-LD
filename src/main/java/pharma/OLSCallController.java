@@ -10,10 +10,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import pharma.Connector.ChebiConnector;
 import pharma.Connector.EbiOlsConnector;
+import pharma.Connector.ExternalServiceConnector;
+import pharma.Connector.MondoConnector;
+import pharma.Connector.NcbiTaxonConnector;
 import pharma.Connector.OboNcitConnector;
 import pharma.Exception.ExternalServiceConnectorException;
+import pharma.Repository.ChebiRepository;
 import pharma.Repository.EbiOlsRepository;
+import pharma.Repository.MondoRepository;
+import pharma.Repository.NcbiTaxonRepository;
 import pharma.Repository.OboNcitRepository;
 import pharma.Term.AbstractTerm;
 
@@ -22,25 +29,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RestController
 public class OLSCallController {
 
-	/**
-	 * 
-	 * MINOR TODOS
-	 * 
-	 * Make a script that creates the DB and the configs...
-	 * Why does the db go away on server reboot??
-	 * Duplicate entries?
-	 * Display the JSON in browser right
-	 *  
-	 */
+	@Autowired
+	private EbiOlsRepository ebiOlsRepo;
 	
 	@Autowired
-	private EbiOlsRepository pr;
+	private OboNcitRepository oboNcitRepo;
 	
 	@Autowired
-	private OboNcitRepository nr;
+	private ChebiRepository chebiRepo;
 	
-	private EbiOlsConnector eoc;
-	private OboNcitConnector ncc;
+	@Autowired
+	private NcbiTaxonRepository ncbiTaxonRepo;
+	
+	@Autowired
+	private MondoRepository mondoRepo;
+	
+	private EbiOlsConnector ebiOlsConn;
+	private OboNcitConnector oboNcitConn;
+	private ChebiConnector chebiConn;
+	private MondoConnector mondoConn;
+	private NcbiTaxonConnector ncbiTaxonConn;
+	
 	
 	/**
 	 * TEMPORARY TASK FOR THIS METHOD
@@ -66,62 +75,70 @@ public class OLSCallController {
 	@RequestMapping("/update")
     public String update() {
     	
-		// Query and store all EBI OLS terms...
-		
-		
-		/* [TermIri] --> [ParentLink] */
-		HashMap<String, String> urlsOfEbiOlsParents = new HashMap<String, String>();
-		HashMap<String, String> urlsOfOboNcitParents = new HashMap<String, String>();
-		
+
 		try {
 			
-			/* now always concatenate the baselist with the returns of query&store */
-			eoc = new EbiOlsConnector("GO:0005575", pr); // parent of 0043226
-			urlsOfEbiOlsParents.putAll(eoc.queryAndStoreOLS());
-			eoc = new EbiOlsConnector("GO:0043226", pr);
-			urlsOfEbiOlsParents.putAll(eoc.queryAndStoreOLS());
+			ebiOlsConn = new EbiOlsConnector();
+			oboNcitConn = new OboNcitConnector();
+			mondoConn = new MondoConnector();
+			ncbiTaxonConn = new NcbiTaxonConnector();
+			chebiConn = new ChebiConnector();
 			
+			// Fetch GO terms
+			updateParentPath(ebiOlsConn, "GO:0003674", ebiOlsRepo);
+			updateParentPath(ebiOlsConn, "GO:0008150", ebiOlsRepo);
+			updateParentPath(ebiOlsConn, "GO:0005575", ebiOlsRepo);
 			
-			ncc = new OboNcitConnector("NCIT:C60743", nr);
-			urlsOfOboNcitParents .putAll(ncc.queryAndStoreOLS());
-	
+			// Fetch NCIT terms
+			updateParentPath(oboNcitConn, "NCIT:C12219", oboNcitRepo);
+			updateParentPath(oboNcitConn, "NCIT:C16847", oboNcitRepo);
+			updateParentPath(oboNcitConn, "NCIT:C19160", oboNcitRepo);
+			
+			/*** Not yet implemented ***/
+			// Fetch Mondo terms
+			//updateParentPath(mondoConn, null, mondoRepo);
+			
+			// Fetch NcbiTaxon terms
+			//updateParentPath(ncbiTaxonConn, null, ncbiTaxonRepo);
+			
+			// Fetch ChebiTerms
+			//updateParentPath(chebiConn, null, chebiRepo);
+			
 		
-			for(Entry<String, String> entry : urlsOfEbiOlsParents.entrySet()) {
-				System.out.println("getParentByURL: "+entry.getValue()+" - "+entry.getKey());
-				eoc.getParentByURL(entry.getValue(), entry.getKey());
-			}
-
-			for(Entry<String, String> entry : urlsOfOboNcitParents.entrySet()) {
-				System.out.println("getParentByURL: "+entry.getValue()+" - "+entry.getKey());
-				ncc.getParentByURL(entry.getValue(), entry.getKey());
-			}
-			
-			
-		
-		} catch (ExternalServiceConnectorException e) {
+		} catch (Exception e) {
 
 			e.printStackTrace();
+			return "{ \"updateStatus\": \"failed\"}";
 		}
 		// Report Success.
 		return "{ \"updateStatus\": \"success\"}";
     }	
 
-	/**
-	 *  update_parent_path(IRI):
-	 *	  parentIRI = get_parent(IRI)
-	 *	  create_new_if_not_exists(parentIRI)
-	 *	  set_child(parentIRI, IRI)
-	 *	  save_labels(parentIRI)
-	 *	  update_parent_path(parentIRI)
-	 *	}
-	 * 
-	 * @param iri
-	 * @return
-	 */
-	@RequestMapping("/update_parent_path")
-    public String updateParentPath(@RequestParam(value="iri", defaultValue="GO:0043226") String iri) {
+
+    public String updateParentPath(ExternalServiceConnector esc, String classParentTerm, Object repo) {
     	
-    	return "WIP...";    	
+		HashMap<String, String> urlsOTermParents = new HashMap<String, String>();
+		
+		try {
+		
+			if(classParentTerm != null)
+				esc.setIri(classParentTerm);
+			esc.setRepo(repo);
+			urlsOTermParents.putAll(esc.queryAndStoreOLS());
+		
+			for(Entry<String, String> entry : urlsOTermParents.entrySet()) {
+				System.out.println("getParentByURL: "+entry.getValue()+" - "+entry.getKey());
+				esc.linkParents(entry.getValue(), entry.getKey());
+			}
+		
+		
+		} catch (ExternalServiceConnectorException e) {
+
+			e.printStackTrace();
+			return "{ \"updateStatus\": \"Update parent path ("+esc.toString()+" / "+classParentTerm+") failed\"}";
+		}
+		// Report Success.
+		return "{ \"updateStatus\": \"Update parent path ("+esc.toString()+" / "+classParentTerm+") success\"}";
     	
     }		
 	
@@ -140,11 +157,11 @@ public class OLSCallController {
     	
     	String retrunstring = "";
 		
-    	List<AbstractTerm> parents = pr.findByIri(parent);
+    	List<AbstractTerm> parents = ebiOlsRepo.findByIri(parent);
 		
     	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
 			AbstractTerm item = i.next();
-			List<AbstractTerm> parent_ids = pr.findByParent(item.getId());
+			List<AbstractTerm> parent_ids = ebiOlsRepo.findByParent(item.getId());
 			
 			if(!parent_ids.isEmpty()) {
 				System.out.println(parent_ids.get(0).getIri());
@@ -157,11 +174,11 @@ public class OLSCallController {
     	   	
     	
     	
-    	parents = nr.findByIri(parent);
+    	parents = oboNcitRepo.findByIri(parent);
 		
     	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
 			AbstractTerm item = i.next();
-			List<AbstractTerm> parent_ids = nr.findByParent(item.getId());
+			List<AbstractTerm> parent_ids = oboNcitRepo.findByParent(item.getId());
 			
 			if(!parent_ids.isEmpty()) {
 				System.out.println(parent_ids.get(0).getIri());
@@ -188,7 +205,8 @@ public class OLSCallController {
 	@RequestMapping("/suggest")
     public String suggest(
     		@RequestParam(value="label", defaultValue="extra") String label,
-    		@RequestParam(value="ontology", defaultValue="go") String ontology) {      
+    		@RequestParam(value="ontology", defaultValue="go") String ontology,
+    		@RequestParam(value="class", defaultValue="") String ontClass) {      
 		
 		//Add JSON wrapper (same for one OLS) -- how to handle different OLS-es here??
     	String returnstring = "{\"@context\": { \"GOCellComp\": \"http://purl.obolibrary.org/obo/GO_0005575\" }," + 
@@ -198,7 +216,7 @@ public class OLSCallController {
     	switch(ontology) {
     	case "go":
     		List<AbstractTerm> labelsGo;
-    		labelsGo = pr.findBySynonym(label);
+    		labelsGo = ebiOlsRepo.findBySynonym(label);
     		for (Iterator<AbstractTerm> i = labelsGo.iterator(); i.hasNext();) {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
@@ -207,13 +225,20 @@ public class OLSCallController {
     		break;
     	case "ncit": 
     		List<AbstractTerm> labelsNcit;
-    		labelsNcit = nr.findBySynonym(label);
+    		labelsNcit = oboNcitRepo.findBySynonym(label);
     		for (Iterator<AbstractTerm> i = labelsNcit.iterator(); i.hasNext();) {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
     			returnstring = returnstring + ",";
     		}     		
     		break;
+    	case "mondo":
+    		break;
+    	case "ncbitaxon":
+    		break;
+    	case "chebi":
+    		break;
+    	default: return "{error: \"Ontology "+ontology+" not supported.\"}";
     	}
 		
     	

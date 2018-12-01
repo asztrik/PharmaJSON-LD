@@ -26,27 +26,29 @@ public class OboNcitConnector implements ExternalServiceConnector {
 	
 	private String iri;
 	
-	private OboNcitRepository pr;
+	private OboNcitRepository oboNcitRepo;
 	
-	OboNcitConnector() {	}	
+	private final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/ncit/terms?id=";
+	
+	public OboNcitConnector() {	}	
 	
 	OboNcitConnector(URL url, HttpURLConnection conn, String iri, OboNcitRepository eor) {
 		this.iri = iri;
 		this.url = url;
 		this.conn = conn;
-		this.pr = eor;
+		this.oboNcitRepo = eor;
 	}
 		
 
 	
 	public OboNcitConnector(String iri, OboNcitRepository eor) {
 		
-		this.pr = eor;
+		this.oboNcitRepo = eor;
 		this.iri = iri;
 		
 		try {
 			this.url = new URL(
-				    "https://www.ebi.ac.uk/ols/api/ontologies/ncit/terms?id="+this.iri);
+					baseUrl+this.iri);
 		} catch (MalformedURLException e1) {
 			e1.printStackTrace();
 		}
@@ -68,6 +70,13 @@ public class OboNcitConnector implements ExternalServiceConnector {
 
 	public void setIri(String iri) {
 		this.iri = iri;
+		
+		try {
+			this.url = new URL(
+					baseUrl+this.iri);
+		} catch (MalformedURLException e1) {
+			e1.printStackTrace();
+		}
 	}
 	
 	/**
@@ -121,7 +130,7 @@ public class OboNcitConnector implements ExternalServiceConnector {
 	 * @return
 	 * @throws ExternalServiceConnectorException
 	 */
-	public void getParentByURL(String url, String childIri) throws ExternalServiceConnectorException {
+	public void linkParents(String url, String childIri) throws ExternalServiceConnectorException {
 		
 		try {
 			this.url = new URL(url);
@@ -136,15 +145,15 @@ public class OboNcitConnector implements ExternalServiceConnector {
     		JSONObject term = terms.getJSONObject(i);
     		
     		// At this moment there are no parents to be found, need to do the linking later!!!
-    		List<AbstractTerm> child = this.pr.findByIri(childIri);
+    		List<AbstractTerm> child = this.oboNcitRepo.findByIri(childIri);
     		if(!child.isEmpty()) {
     			System.out.println("Child: " + child.get(0).getIri() + " - " + child.get(0).toString());
     			System.out.println("Term: " + term.getString("iri"));
-    			List<AbstractTerm> parent = this.pr.findByIri(term.getString("iri"));
+    			List<AbstractTerm> parent = this.oboNcitRepo.findByIri(term.getString("iri"));
     			if(!parent.isEmpty()) {
     				System.out.println("Parent: " + parent.get(0).getIri());
     				child.get(0).setParent(parent.get(0));
-    				pr.save(child.get(0));
+    				oboNcitRepo.save(child.get(0));
     			}
     		}
     	}
@@ -177,7 +186,7 @@ public class OboNcitConnector implements ExternalServiceConnector {
     		
     		pt.setSynonym(term.getString("label"));
 
-    		pr.save(pt);
+    		oboNcitRepo.save(pt);
   
     		
     	}
@@ -188,6 +197,18 @@ public class OboNcitConnector implements ExternalServiceConnector {
 
 	@Override
 	public AbstractTerm retrieveAsJSON(String iri) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setRepo(Object repo) {
+		this.oboNcitRepo = (OboNcitRepository) repo;
+		
+	}
+
+	@Override
+	public Object getRepo() {
 		// TODO Auto-generated method stub
 		return null;
 	}

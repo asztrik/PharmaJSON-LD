@@ -6,10 +6,12 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -27,25 +29,27 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 	
 	private String iri;
 	
-	private EbiOlsRepository pr;
+	private EbiOlsRepository ebiOlsRepo;
 	
-	EbiOlsConnector() {	}	
+	private final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/go/children?id=";
 	
-	EbiOlsConnector(URL url, HttpURLConnection conn, String iri, EbiOlsRepository eor) {
+	public EbiOlsConnector() {	}	
+	
+	public EbiOlsConnector(URL url, HttpURLConnection conn, String iri, EbiOlsRepository eor) {
 		this.iri = iri;
 		this.url = url;
 		this.conn = conn;
-		this.pr = eor;
+		this.ebiOlsRepo = eor;
 	}
 	
 	public EbiOlsConnector(String iri, EbiOlsRepository eor) {
 		
-		this.pr = eor;
+		this.ebiOlsRepo = eor;
 		this.iri = iri;
 		
 		try {
 			this.url = new URL(
-				    "https://www.ebi.ac.uk/ols/api/ontologies/go/children?id="+this.iri);
+					baseUrl+this.iri);
 		} catch (MalformedURLException e1) {
 			e1.printStackTrace();
 		}
@@ -67,6 +71,13 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 
 	public void setIri(String iri) {
 		this.iri = iri;
+		
+		try {
+			this.url = new URL(
+					baseUrl+this.iri);
+		} catch (MalformedURLException e1) {
+			e1.printStackTrace();
+		}
 	}
 	
 	/**
@@ -121,7 +132,7 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 	 * @return
 	 * @throws ExternalServiceConnectorException
 	 */
-	public void getParentByURL(String url, String childIri) throws ExternalServiceConnectorException {
+	public void linkParents(String url, String childIri) throws ExternalServiceConnectorException {
 		
 		try {
 			this.url = new URL(url);
@@ -136,15 +147,15 @@ public class EbiOlsConnector implements ExternalServiceConnector {
     		JSONObject term = terms.getJSONObject(i);
     		
     		// At this moment there are no parents to be found, need to do the linking later!!!
-    		List<AbstractTerm> child = this.pr.findByIri(childIri);
+    		List<AbstractTerm> child = this.ebiOlsRepo.findByIri(childIri);
     		if(!child.isEmpty()) {
     			System.out.println("Child: " + child.get(0).getIri() + " - " + child.get(0).toString());
     			System.out.println("Term: " + term.getString("iri"));
-    			List<AbstractTerm> parent = this.pr.findByIri(term.getString("iri"));
+    			List<AbstractTerm> parent = this.ebiOlsRepo.findByIri(term.getString("iri"));
     			if(!parent.isEmpty()) {
     				System.out.println("Parent: " + parent.get(0).getIri());
     				child.get(0).setParent(parent.get(0));
-    				pr.save(child.get(0));
+    				ebiOlsRepo.save(child.get(0));
     			}
     		}
     	}
@@ -184,7 +195,20 @@ public class EbiOlsConnector implements ExternalServiceConnector {
     		
     		pt.setSynonym(term.getString("label"));
 
-    		pr.save(pt);
+    		try {
+	    		JSONArray synonymsObj = term.getJSONArray("synonyms");
+	    		
+	    		System.out.println("+++ SYNONYMS FOUND: +++");
+	    		for(int j=0; j<synonymsObj.length(); j++) {
+	    			System.out.println(synonymsObj.get(j));
+	    		}
+    		} catch (JSONException jse) {
+    			// Do nothing, it's normal...
+    		}
+    		
+
+		
+    		ebiOlsRepo.save(pt);
   
     		
     	}
@@ -195,6 +219,18 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 	
 	@Override
 	public AbstractTerm retrieveAsJSON(String iri) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void setRepo(Object repo) {
+		this.ebiOlsRepo = (EbiOlsRepository)repo;
+		
+	}
+
+	@Override
+	public Object getRepo() {
 		// TODO Auto-generated method stub
 		return null;
 	}

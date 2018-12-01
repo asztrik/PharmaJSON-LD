@@ -11,5 +11,17 @@ public interface ExternalServiceConnector {
 	
 	// Retrieves a previously persisted term as a JSON Object
 	public AbstractTerm retrieveAsJSON(String iri);
+	
+	// Links the parents to the children
+	public void linkParents(String url, String childIri) throws ExternalServiceConnectorException;
+	
+	public void setIri(String iri);
+	
+	public String getIri();
+	
+	public void setRepo(Object repo);
+	
+	public Object getRepo();
+	
 
 }
