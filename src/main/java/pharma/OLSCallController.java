@@ -88,15 +88,15 @@ public class OLSCallController {
 			chebiConn = new ChebiConnector();
 			
 			// Fetch GO terms
-			updateParentPath(ebiOlsConn, "GO:0003674", ebiOlsRepo);
-			updateParentPath(ebiOlsConn, "GO:0008150", ebiOlsRepo);
-			updateParentPath(ebiOlsConn, "GO:0005575", ebiOlsRepo);
+			updateParentPath(ebiOlsConn, "GO:0003674", ebiOlsRepo, "GO0003674");
+			updateParentPath(ebiOlsConn, "GO:0008150", ebiOlsRepo, "GO0008150");
+			updateParentPath(ebiOlsConn, "GO:0005575", ebiOlsRepo, "GO0005575");
 			
 			// Fetch NCIT terms
-			updateParentPath(oboNcitConn, "NCIT:C12219", oboNcitRepo);
+			updateParentPath(oboNcitConn, "NCIT:C12219", oboNcitRepo, "C12219");
 			/** Iri-s are not found, default "Rat esophagus comes instead **/
-			//updateParentPath(oboNcitConn, "NCIT:C16847", oboNcitRepo);
-			//updateParentPath(oboNcitConn, "NCIT:C19160", oboNcitRepo);
+			//updateParentPath(oboNcitConn, "NCIT:C16847", oboNcitRepo, "C16847");
+			//updateParentPath(oboNcitConn, "NCIT:C19160", oboNcitRepo, "C19160");
 			
 			/*** Not yet implemented ***/
 			// Fetch Mondo terms
@@ -119,7 +119,7 @@ public class OLSCallController {
     }	
 
 
-    public String updateParentPath(ExternalServiceConnector esc, String classParentTerm, Object repo) {
+    public String updateParentPath(ExternalServiceConnector esc, String classParentTerm, Object repo, String ontoClass) {
     	
 		HashMap<String, String> urlsOTermParents = new HashMap<String, String>();
 		
@@ -128,7 +128,7 @@ public class OLSCallController {
 			if(classParentTerm != null)
 				esc.setIri(classParentTerm);
 			esc.setRepo(repo);
-			urlsOTermParents.putAll(esc.queryAndStoreOLS());
+			urlsOTermParents.putAll(esc.queryAndStoreOLS(ontoClass));
 		
 			for(Entry<String, String> entry : urlsOTermParents.entrySet()) {
 				System.out.println("getParentByURL: "+entry.getValue()+" - "+entry.getKey());
@@ -158,7 +158,8 @@ public class OLSCallController {
     @RequestMapping("/getchildren")
     public String getChildren(
     		@RequestParam(value="parent", defaultValue="C60743") String parent,
-    		@RequestParam(value="ontology", defaultValue="ncit") String ontology) {
+    		@RequestParam(value="ontology", defaultValue="ncit") String ontology,
+    		@RequestParam(value="class", defaultValue="") String ontoClass) {
  	
     	// create a Set to uniquely store the found parents
     	Set<AbstractTerm> parents = new HashSet<AbstractTerm>();
@@ -172,14 +173,14 @@ public class OLSCallController {
     		parents.addAll(ebiOlsRepo.findByIri(parent));
     		System.out.println("Parent IRI: "+parent);
     		for(AbstractTerm t : parents) {
-    			parent_ids = ebiOlsRepo.findByParent(t);
+    			parent_ids = ebiOlsRepo.findByParent(t, ontoClass);
     		}
     		break;
     	case "ncit":
     		parents.addAll(oboNcitRepo.findByIri(parent));
     		System.out.println("Parent IRI: "+parent);
     		for(AbstractTerm t : parents) {
-    			parent_ids = oboNcitRepo.findByParent(t);
+    			parent_ids = oboNcitRepo.findByParent(t, ontoClass);
     		}
     		break;
     	case "ncbitaxon":
@@ -235,7 +236,6 @@ public class OLSCallController {
     		@RequestParam(value="ontology", defaultValue="go") String ontology,
     		@RequestParam(value="class", defaultValue="") String ontClass) {      
 		
-		//Add JSON wrapper (same for one OLS) -- how to handle different OLS-es here??
     	String returnstring = "{\"@context\": { \"GOCellComp\": \"http://purl.obolibrary.org/obo/GO_0005575\" }," + 
     			"\""+label+"\": [ ";
 	
@@ -243,7 +243,8 @@ public class OLSCallController {
     	switch(ontology) {
     	case "go":
     		List<AbstractTerm> labelsGo;
-    		labelsGo = ebiOlsRepo.findBySynonym(label);
+    		System.out.println("OC: "+ontClass);
+    		labelsGo = ebiOlsRepo.findBySynonym(label, ontClass);
     		for (Iterator<AbstractTerm> i = labelsGo.iterator(); i.hasNext();) {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
@@ -252,7 +253,7 @@ public class OLSCallController {
     		break;
     	case "ncit": 
     		List<AbstractTerm> labelsNcit;
-    		labelsNcit = oboNcitRepo.findBySynonym(label);
+    		labelsNcit = oboNcitRepo.findBySynonym(label, ontClass);
     		for (Iterator<AbstractTerm> i = labelsNcit.iterator(); i.hasNext();) {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();

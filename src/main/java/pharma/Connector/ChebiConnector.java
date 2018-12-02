@@ -6,7 +6,6 @@ import java.util.HashMap;
 
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.ChebiRepository;
-import pharma.Repository.OboNcitRepository;
 import pharma.Term.AbstractTerm;
 
 public class ChebiConnector implements ExternalServiceConnector {
@@ -25,7 +24,7 @@ public class ChebiConnector implements ExternalServiceConnector {
 	public ChebiConnector() {	}	
 	
 	@Override
-	public HashMap<String, String> queryAndStoreOLS() throws ExternalServiceConnectorException {
+	public HashMap<String, String> queryAndStoreOLS(String ontoClass) throws ExternalServiceConnectorException {
 		// TODO Auto-generated method stub
 		return null;
 	}

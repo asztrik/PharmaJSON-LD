@@ -30,6 +30,8 @@ public abstract class AbstractTerm {
 
 	protected String synonym;
 	
+	protected String ontoclass;
+	
     @ManyToOne(targetEntity = AbstractTerm.class, optional=true)
     @JoinColumn(name="PARENT_ID", nullable=true)
     protected AbstractTerm parent;
@@ -76,5 +78,15 @@ public abstract class AbstractTerm {
 		this.parent = parentlist;
 	}
 
+	
+	public String getOntoClass() {
+		return ontoclass;
+	}
+
+	public void setOntoClass(String ontoClass) {
+		this.ontoclass = ontoClass;
+	}
+	
+	
 	
 }

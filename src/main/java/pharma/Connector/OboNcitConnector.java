@@ -162,7 +162,7 @@ public class OboNcitConnector implements ExternalServiceConnector {
 	}	
 	
 	@Override
-	public HashMap<String, String> queryAndStoreOLS() throws ExternalServiceConnectorException {
+	public HashMap<String, String> queryAndStoreOLS(String ontoClass) throws ExternalServiceConnectorException {
 		
 		if(this.iri.isEmpty() || this.iri == null) {
 				throw new ExternalServiceConnectorException("Iri is not set, the OLS would give 404");	
@@ -201,6 +201,8 @@ public class OboNcitConnector implements ExternalServiceConnector {
     		
     		pt.setSynonym(labelString);
 
+    		pt.setOntoClass(ontoClass);
+    		
     		oboNcitRepo.save(pt);
   
     		

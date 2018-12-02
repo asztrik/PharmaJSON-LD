@@ -13,12 +13,18 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ChebiRepository extends CrudRepository<AbstractTerm, Long> {
 
-	@Query("SELECT p FROM AbstractTerm p WHERE p.iri LIKE LOWER(CONCAT('%',:iri, '%')) AND dtype LIKE 'ChebiTerm'")
+	@Query("SELECT p FROM AbstractTerm p "
+			+ "WHERE p.iri LIKE LOWER(CONCAT('%',:iri, '%')) "
+			+ "AND dtype LIKE 'ChebiTerm'")
 	List<AbstractTerm> findByIri(String iri);
 	
-	@Query("SELECT p FROM AbstractTerm p WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%')) AND dtype LIKE 'ChebiTerm'")
+	@Query("SELECT p FROM AbstractTerm p "
+			+ "WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%')) "
+			+ "AND dtype LIKE 'ChebiTerm'")
 	List<AbstractTerm> findBySynonym(String synonym);
 		
-	@Query(value = "SELECT p FROM AbstractTerm p WHERE p.parent = :parentId AND dtype LIKE 'ChebiTerm'")
+	@Query(value = "SELECT p FROM AbstractTerm p "
+			+ "WHERE p.parent = :parentId "
+			+ "AND dtype LIKE 'ChebiTerm'")
 	List<AbstractTerm> findByParent(@Param("parentId") AbstractTerm parent);	
 }

@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -170,7 +169,7 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 	 * Both unique.
 	 */
 	@Override
-	public HashMap<String, String> queryAndStoreOLS() throws ExternalServiceConnectorException {
+	public HashMap<String, String> queryAndStoreOLS(String ontoClass) throws ExternalServiceConnectorException {
 		
 		if(this.iri.isEmpty() || this.iri == null) {
 				throw new ExternalServiceConnectorException("Iri is not set, the OLS would give 404");	
@@ -208,6 +207,8 @@ public class EbiOlsConnector implements ExternalServiceConnector {
     		labelString = labelString + "\"";
     		
     		pt.setSynonym(labelString);
+    		
+    		pt.setOntoClass(ontoClass);
 		
     		ebiOlsRepo.save(pt);
   

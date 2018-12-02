@@ -13,12 +13,20 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface EbiOlsRepository extends CrudRepository<AbstractTerm, Long> {
 
-	@Query("SELECT p FROM AbstractTerm p WHERE p.iri LIKE LOWER(CONCAT('%',:iri, '%')) AND dtype LIKE 'EbiOlsTerm'")
+	@Query(value = "SELECT p FROM AbstractTerm p "
+			+ "WHERE p.iri LIKE LOWER(CONCAT('%',:iri, '%')) "
+			+ "AND dtype LIKE 'EbiOlsTerm'")
 	List<AbstractTerm> findByIri(String iri);
 	
-	@Query("SELECT p FROM AbstractTerm p WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%')) AND dtype LIKE 'EbiOlsTerm'")
-	List<AbstractTerm> findBySynonym(String synonym);
+	@Query(value = "SELECT p FROM AbstractTerm p "
+			+ "WHERE p.synonym LIKE LOWER(CONCAT('%',:syn, '%')) "
+			+ "AND dtype LIKE 'EbiOlsTerm'"
+			+ "AND ontoclass LIKE UPPER(CONCAT('%',:oc, '%'))")
+	List<AbstractTerm> findBySynonym(@Param("syn") String synonym, @Param("oc") String ontoClass);
 		
-	@Query(value = "SELECT p FROM AbstractTerm p WHERE p.parent = :parentId AND dtype LIKE 'EbiOlsTerm'")
-	List<AbstractTerm> findByParent(@Param("parentId") AbstractTerm parent);	
+	@Query(value = "SELECT p FROM AbstractTerm p "
+			+ "WHERE p.parent = :parentId "
+			+ "AND dtype LIKE 'EbiOlsTerm'"
+			+ "AND ontoclass LIKE UPPER(CONCAT('%',:oc, '%'))")
+	List<AbstractTerm> findByParent(@Param("parentId") AbstractTerm parent, @Param("oc") String ontoClass);	
 }

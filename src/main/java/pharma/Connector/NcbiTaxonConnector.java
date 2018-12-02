@@ -6,7 +6,6 @@ import java.util.HashMap;
 
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.NcbiTaxonRepository;
-import pharma.Repository.OboNcitRepository;
 import pharma.Term.AbstractTerm;
 
 public class NcbiTaxonConnector implements ExternalServiceConnector {
@@ -24,7 +23,7 @@ public class NcbiTaxonConnector implements ExternalServiceConnector {
 	public NcbiTaxonConnector() {	}	
 	
 	@Override
-	public HashMap<String, String> queryAndStoreOLS() throws ExternalServiceConnectorException {
+	public HashMap<String, String> queryAndStoreOLS(String ontoClass) throws ExternalServiceConnectorException {
 		// TODO Auto-generated method stub
 		return null;
 	}
