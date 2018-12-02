@@ -10,10 +10,6 @@ import org.json.JSONObject;
 @Entity
 public class OboNcitTerm extends AbstractTerm {
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
-	
 	@Override
 	public JSONObject toJSON() {
 		JSONObject output = new JSONObject(

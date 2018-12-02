@@ -4,6 +4,7 @@ package pharma;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -93,8 +94,9 @@ public class OLSCallController {
 			
 			// Fetch NCIT terms
 			updateParentPath(oboNcitConn, "NCIT:C12219", oboNcitRepo);
-			updateParentPath(oboNcitConn, "NCIT:C16847", oboNcitRepo);
-			updateParentPath(oboNcitConn, "NCIT:C19160", oboNcitRepo);
+			/** Iri-s are not found, default "Rat esophagus comes instead **/
+			//updateParentPath(oboNcitConn, "NCIT:C16847", oboNcitRepo);
+			//updateParentPath(oboNcitConn, "NCIT:C19160", oboNcitRepo);
 			
 			/*** Not yet implemented ***/
 			// Fetch Mondo terms
@@ -154,72 +156,68 @@ public class OLSCallController {
 	 * @return
 	 */
     @RequestMapping("/getchildren")
-    public String getChildren(@RequestParam(value="parent", defaultValue="C60743") String parent) {
+    public String getChildren(
+    		@RequestParam(value="parent", defaultValue="C60743") String parent,
+    		@RequestParam(value="ontology", defaultValue="ncit") String ontology) {
  	
+    	// create a Set to uniquely store the found parents
+    	Set<AbstractTerm> parents = new HashSet<AbstractTerm>();
+    	List<AbstractTerm> parent_ids = new ArrayList<AbstractTerm>();
     	
+    	// String for the response JSON
+    	String returnString = "{ \"getChildrenResult\": [ "; 
     	
+    	switch(ontology) {
+    	case "go":
+    		parents.addAll(ebiOlsRepo.findByIri(parent));
+    		System.out.println("Parent IRI: "+parent);
+    		for(AbstractTerm t : parents) {
+    			parent_ids = ebiOlsRepo.findByParent(t);
+    		}
+    		break;
+    	case "ncit":
+    		parents.addAll(oboNcitRepo.findByIri(parent));
+    		System.out.println("Parent IRI: "+parent);
+    		for(AbstractTerm t : parents) {
+    			parent_ids = oboNcitRepo.findByParent(t);
+    		}
+    		break;
+    	case "ncbitaxon":
+    		parents.addAll(ncbiTaxonRepo.findByIri(parent));
+    		System.out.println("Parent IRI: "+parent);
+    		for(AbstractTerm t : parents) {
+    			parent_ids = ncbiTaxonRepo.findByParent(t);
+    		}
+    		break;
+    	case "mondo":
+    		parents.addAll(mondoRepo.findByIri(parent));
+    		System.out.println("Parent IRI: "+parent);
+    		for(AbstractTerm t : parents) {
+    			parent_ids = mondoRepo.findByParent(t);
+    		}
+    		break;
+    	case "chebi":
+    		parents.addAll(chebiRepo.findByIri(parent));
+    		System.out.println("Parent IRI: "+parent);
+    		for(AbstractTerm t : parents) {
+    			parent_ids = chebiRepo.findByParent(t);
+    		}
+    		break;
+    	default: return "{error: \"Ontology "+ontology+" not supported.\"}";
+    	}
     	
-    	return "Not yet..";
+		int elemCount = 1;
+		for(AbstractTerm t : parent_ids) {
+			returnString = returnString + t.toJSON().toString();
+			elemCount++;
+			if(elemCount <= parent_ids.size())
+				returnString = returnString + ", ";
+		}
     	
-    	// Every term is comin multiple times: todo: rewrite univesally!
-//    	String returnstring = "{ \"getChildrenResult\": [ "; 
-//    			
-//    	List<AbstractTerm> parents = ebiOlsRepo.findByIri(parent);
-//    	
-//		Set<AbstractTerm> hsp = new HashSet<AbstractTerm>();
-//		hsp.addAll(parents);
-//		parents.clear();
-//		parents.addAll(hsp);
-//    	
-//		
-//    	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
-//			AbstractTerm item = i.next();
-//			List<AbstractTerm> parent_ids = ebiOlsRepo.findByParent(item.getId());
-//			
-//			if(!parent_ids.isEmpty()) {
-//				System.out.println(parent_ids.get(0).getIri());
-//		    	for (Iterator<AbstractTerm> j = parent_ids.iterator(); j.hasNext();) {
-//		    		AbstractTerm child = j.next();
-//		    		returnstring = returnstring + child.toJSON().toString();
-//		    		if(j.hasNext())
-//		    			returnstring = returnstring + ",";
-//		    	}	
-//			}
-//		} 
-//    	   	
-//    	
-//    	
-//    	parents = oboNcitRepo.findByIri(parent);
-//    	
-//    	hsp = new HashSet<AbstractTerm>();
-//		hsp.addAll(parents);
-//		parents.clear();
-//		parents.addAll(hsp);
-//		
-//    	for (Iterator<AbstractTerm> i = parents.iterator(); i.hasNext();) {
-//			AbstractTerm item = i.next();
-//			List<AbstractTerm> parent_ids = oboNcitRepo.findByParent(item.getId());
-//			
-//			Set<AbstractTerm> hs = new HashSet<AbstractTerm>();
-//			hs.addAll(parent_ids);
-//			parent_ids.clear();
-//			parent_ids.addAll(hs);
-//			
-//			if(!parent_ids.isEmpty()) {
-//				System.out.println(parent_ids.get(0).getIri());
-//		    	for (Iterator<AbstractTerm> j = parent_ids.iterator(); j.hasNext();) {
-//		    		AbstractTerm child = j.next();
-//		    		returnstring = returnstring + child.toJSON().toString();
-//		    		if(j.hasNext())
-//		    			returnstring = returnstring + ",";
-//		    	}	
-//			}
-//		} 
-//    	
-//    	returnstring = returnstring + "] }";
-//    	
-//    	return returnstring;
-
+    	returnString = returnString + "] }";
+    	
+    	return returnString;
+    	
     }
 	
     /**

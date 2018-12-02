@@ -21,7 +21,7 @@ public abstract class AbstractTerm {
 	// An Id is needed for the Persistence API
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
+	protected Integer id;
 
 	// Here are the fields that all the Terms have
 	protected String iri;

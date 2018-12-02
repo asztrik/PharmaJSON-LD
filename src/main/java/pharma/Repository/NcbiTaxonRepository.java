@@ -2,6 +2,7 @@ package pharma.Repository;
 
 import java.util.List;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
 import pharma.Term.AbstractTerm;
 
@@ -18,6 +19,6 @@ public interface NcbiTaxonRepository extends CrudRepository<AbstractTerm, Long> 
 	@Query("SELECT p FROM AbstractTerm p WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%')) AND dtype LIKE 'NcbiTaxonTerm'")
 	List<AbstractTerm> findBySynonym(String synonym);
 	
-	@Query("SELECT p FROM AbstractTerm p WHERE p.parent = parent AND dtype LIKE 'NcbiTaxonTerm'")
-	List<AbstractTerm> findByParent(Integer parent);	
+	@Query(value = "SELECT p FROM AbstractTerm p WHERE p.parent = :parentId AND dtype LIKE 'NcbiTaxonTerm'")
+	List<AbstractTerm> findByParent(@Param("parentId") AbstractTerm parent);	
 }

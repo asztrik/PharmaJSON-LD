@@ -10,9 +10,6 @@ import org.json.JSONObject;
 @Entity
 public class MondoTerm extends AbstractTerm {
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Integer id;
 	
 	public JSONObject toJSON () {
 		
