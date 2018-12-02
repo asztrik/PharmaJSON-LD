@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import pharma.Exception.ExternalServiceConnectorException;
@@ -184,7 +185,21 @@ public class OboNcitConnector implements ExternalServiceConnector {
     		
     		System.out.println(term.getString("iri") + " saved.");
     		
-    		pt.setSynonym(term.getString("label"));
+    		String labelString = "\"" + term.getString("label") ;
+    		
+    		try {
+	    		JSONArray synonymsObj = term.getJSONArray("synonyms");
+	    		
+	    		for(int j=0; j<synonymsObj.length(); j++) {
+	    			labelString = labelString + " -- "+synonymsObj.get(j);
+	    		}
+    		} catch (JSONException jse) {
+    			// Do nothing, it's normal...
+    		}
+    		
+    		labelString = labelString + "\"";
+    		
+    		pt.setSynonym(labelString);
 
     		oboNcitRepo.save(pt);
   
