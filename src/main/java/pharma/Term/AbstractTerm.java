@@ -1,6 +1,7 @@
 package pharma.Term;
 
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -28,9 +29,12 @@ public abstract class AbstractTerm {
 	
 	protected String label;
 
+	@Column(columnDefinition="TEXT")
 	protected String synonym;
 	
 	protected String ontoclass;
+	
+	/*** THIS SHOULD BE MANY-TO-MANY... ***/
 	
     @ManyToOne(targetEntity = AbstractTerm.class, optional=true)
     @JoinColumn(name="PARENT_ID", nullable=true)

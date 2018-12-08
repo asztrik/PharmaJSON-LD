@@ -3,7 +3,9 @@ package pharma;
 
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,6 +80,16 @@ public class OLSCallController {
 	@RequestMapping("/update")
     public String update() {
     	
+		Properties prop = new Properties();
+		try {
+		    //load a properties file from class path, inside static method
+		    prop.load(Application.class.getClassLoader().getResourceAsStream("application.properties"));
+
+		} 
+		catch (IOException ex) {
+		    ex.printStackTrace();
+		}
+		
 
 		try {
 			
@@ -88,25 +100,39 @@ public class OLSCallController {
 			chebiConn = new ChebiConnector();
 			
 			// Fetch GO terms
-			updateParentPath(ebiOlsConn, "GO:0003674", ebiOlsRepo, "GO0003674");
-			updateParentPath(ebiOlsConn, "GO:0008150", ebiOlsRepo, "GO0008150");
-			updateParentPath(ebiOlsConn, "GO:0005575", ebiOlsRepo, "GO0005575");
+//			updateParentPath(ebiOlsConn, prop.getProperty("ebiols1"), ebiOlsRepo, prop.getProperty("ebiols1").replaceAll(":", ""));
+//			updateParentPath(ebiOlsConn, prop.getProperty("ebiols2"), ebiOlsRepo, prop.getProperty("ebiols2").replaceAll(":", ""));
+//			updateParentPath(ebiOlsConn, prop.getProperty("ebiols3"), ebiOlsRepo, prop.getProperty("ebiols3").replaceAll(":", ""));
+//			updateParentPath(ebiOlsConn, prop.getProperty("ebiols4"), ebiOlsRepo, prop.getProperty("ebiols4").replaceAll(":", ""));
+//			updateParentPath(ebiOlsConn, prop.getProperty("ebiols5"), ebiOlsRepo, prop.getProperty("ebiols5").replaceAll(":", ""));
 			
 			// Fetch NCIT terms
-			updateParentPath(oboNcitConn, "NCIT:C12219", oboNcitRepo, "C12219");
-			/** Iri-s are not found, default "Rat esophagus comes instead **/
-			//updateParentPath(oboNcitConn, "NCIT:C16847", oboNcitRepo, "C16847");
-			//updateParentPath(oboNcitConn, "NCIT:C19160", oboNcitRepo, "C19160");
+//			updateParentPath(oboNcitConn, prop.getProperty("oboncit1"), oboNcitRepo, prop.getProperty("oboncit1").replaceAll(":", ""));
+//			updateParentPath(oboNcitConn, prop.getProperty("oboncit2"), oboNcitRepo, prop.getProperty("oboncit2").replaceAll(":", ""));
+//			updateParentPath(oboNcitConn, prop.getProperty("oboncit3"), oboNcitRepo, prop.getProperty("oboncit3").replaceAll(":", ""));
+//			updateParentPath(oboNcitConn, prop.getProperty("oboncit4"), oboNcitRepo, prop.getProperty("oboncit4").replaceAll(":", ""));
+//			updateParentPath(oboNcitConn, prop.getProperty("oboncit5"), oboNcitRepo, prop.getProperty("oboncit5").replaceAll(":", ""));
 			
-			/*** Not yet implemented ***/
 			// Fetch Mondo terms
-			//updateParentPath(mondoConn, null, mondoRepo);
+//			updateParentPath(mondoConn, prop.getProperty("mondo1"), mondoRepo, "MONDO");
+//			updateParentPath(mondoConn, prop.getProperty("mondo2"), mondoRepo, "MONDO");
+//			updateParentPath(mondoConn, prop.getProperty("mondo3"), mondoRepo, "MONDO");
+//			updateParentPath(mondoConn, prop.getProperty("mondo4"), mondoRepo, "MONDO");
+//			updateParentPath(mondoConn, prop.getProperty("mondo5"), mondoRepo, "MONDO");
 			
 			// Fetch NcbiTaxon terms
-			//updateParentPath(ncbiTaxonConn, null, ncbiTaxonRepo);
+//			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon1"), ncbiTaxonRepo, "NCBITAXON");
+//			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon2"), ncbiTaxonRepo, "NCBITAXON");
+//			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon3"), ncbiTaxonRepo, "NCBITAXON");
+//			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon4"), ncbiTaxonRepo, "NCBITAXON");
+//			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon5"), ncbiTaxonRepo, "NCBITAXON");
 			
 			// Fetch ChebiTerms
-			//updateParentPath(chebiConn, null, chebiRepo);
+			updateParentPath(chebiConn, prop.getProperty("chebi1"), chebiRepo, "CHEBI");
+			updateParentPath(chebiConn, prop.getProperty("chebi2"), chebiRepo, "CHEBI");
+			updateParentPath(chebiConn, prop.getProperty("chebi3"), chebiRepo, "CHEBI");
+			updateParentPath(chebiConn, prop.getProperty("chebi4"), chebiRepo, "CHEBI");
+			updateParentPath(chebiConn, prop.getProperty("chebi5"), chebiRepo, "CHEBI");
 			
 		
 		} catch (Exception e) {
@@ -120,6 +146,9 @@ public class OLSCallController {
 
 
     public String updateParentPath(ExternalServiceConnector esc, String classParentTerm, Object repo, String ontoClass) {
+    	
+    	if(classParentTerm.isEmpty() || classParentTerm.equals(null))
+    		return "{ \"updateStatus\": \"Update parent path ("+esc.toString()+" / Empty term) skipping\"}";
     	
 		HashMap<String, String> urlsOTermParents = new HashMap<String, String>();
 		

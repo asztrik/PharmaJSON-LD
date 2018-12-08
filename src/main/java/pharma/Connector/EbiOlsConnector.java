@@ -1,8 +1,6 @@
 package pharma.Connector;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,27 +8,21 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Term.AbstractTerm;
+import pharma.Term.ChebiTerm;
 import pharma.Term.EbiOlsTerm;
 
 @Service
-public class EbiOlsConnector implements ExternalServiceConnector {
-
-	private URL url = null;
+public class EbiOlsConnector extends AbstractOlsConnector {
 	
-	private HttpURLConnection conn = null;
+	protected EbiOlsRepository ebiOlsRepo;
 	
-	private String iri;
-	
-	private EbiOlsRepository ebiOlsRepo;
-	
-	private final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/go/children?id=";
+	protected final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/go/children?id=";
 	
 	public EbiOlsConnector() {	}	
 	
@@ -64,67 +56,7 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 		this.conn.setRequestProperty("Accept", "application/json");
 	}
 	
-	public String getIri() {
-		return iri;
-	}
 
-	public void setIri(String iri) {
-		this.iri = iri;
-		
-		try {
-			this.url = new URL(
-					baseUrl+this.iri);
-		} catch (MalformedURLException e1) {
-			e1.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Connects to the url set for this class and retrieves all the terms to one IRI as JSONArray
-	 * @return
-	 * @throws ExternalServiceConnectorException
-	 */
-	private JSONArray connectAndGetJSON() throws ExternalServiceConnectorException {
-		
-		System.out.println("URL called " + url);
-		
-		try {
-			conn = (HttpURLConnection) this.url.openConnection();
-			conn.setRequestMethod("GET");
-			conn.setRequestProperty("Accept", "application/json");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		JSONObject json = null;
-		
-		try {
-			if (conn.getResponseCode() != 200) {
-			    throw new RuntimeException("Failed : HTTP error code : "
-			        + conn.getResponseCode());
-			    }		
-	        StringBuilder sb = new StringBuilder();        
-	        String line;       
-	        BufferedReader br = new BufferedReader(new InputStreamReader(
-	                (this.conn.getInputStream())));
-	        while ((line = br.readLine()) != null) {
-	            sb.append(line);
-	        }        
-	        
-	        if(sb.toString().isEmpty())
-	        	throw new ExternalServiceConnectorException("Empty response from " + conn.getURL());	
-	        	
-	        json = new JSONObject(sb.toString());
-	        
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		
-    	return json.getJSONObject("_embedded").getJSONArray("terms");		
-	}
-	
-	
 	/**
 	 * Gets only the parents of a term as a list
 	 * @param url
@@ -140,7 +72,7 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 		}
 		
 		JSONArray terms = connectAndGetJSON();
-    	
+		  	
     	// get the terms one by one
     	for (int i=0; i < terms.length(); i++) {
     		JSONObject term = terms.getJSONObject(i);
@@ -148,11 +80,8 @@ public class EbiOlsConnector implements ExternalServiceConnector {
     		// At this moment there are no parents to be found, need to do the linking later!!!
     		List<AbstractTerm> child = this.ebiOlsRepo.findByIri(childIri);
     		if(!child.isEmpty()) {
-    			System.out.println("Child: " + child.get(0).getIri() + " - " + child.get(0).toString());
-    			System.out.println("Term: " + term.getString("iri"));
     			List<AbstractTerm> parent = this.ebiOlsRepo.findByIri(term.getString("iri"));
     			if(!parent.isEmpty()) {
-    				System.out.println("Parent: " + parent.get(0).getIri());
     				child.get(0).setParent(parent.get(0));
     				ebiOlsRepo.save(child.get(0));
     			}
@@ -180,38 +109,35 @@ public class EbiOlsConnector implements ExternalServiceConnector {
     	
     	HashMap<String, String> parentLinkList = new HashMap<String, String>();
     	
+		if(terms == null)
+			return parentLinkList; // return empty list if there are no more children.
+   	
     	// get the terms one by one
     	for (int i=0; i < terms.length(); i++) {
-    		JSONObject term = terms.getJSONObject(i);
+
+    		EbiOlsTerm term = new EbiOlsTerm();
     		
-    		// Create Entity that will be persisted
-    		EbiOlsTerm pt = new EbiOlsTerm();
-    		pt.setIri(term.getString("iri"));
+    		term = (EbiOlsTerm)retrieveTerm(terms, i,  ontoClass, term);
     		
-    		parentLinkList.put( term.getString("iri"), term.getJSONObject("_links").getJSONObject("parents").getString("href"));
+    		parentLinkList.put( term.getIri(), terms.getJSONObject(i).getJSONObject("_links").getJSONObject("parents").getString("href"));
     		
-    		System.out.println(term.getString("iri") + " saved.");
     		
-    		String labelString = "\"" + term.getString("label") ;
+    		ebiOlsRepo.save(term);
     		
-    		try {
-	    		JSONArray synonymsObj = term.getJSONArray("synonyms");
-	    		
-	    		for(int j=0; j<synonymsObj.length(); j++) {
-	    			labelString = labelString + " -- "+synonymsObj.get(j);
-	    		}
-    		} catch (JSONException jse) {
-    			// Do nothing, it's normal...
-    		}
     		
-    		labelString = labelString + "\"";
+    		// Now get the iri
+    		String iri = term.getIri();
     		
-    		pt.setSynonym(labelString);
+    		// Format for the next request
+    		iri.replace("http://purl.obolibrary.org/obo/", "");
+    		iri.replace("_", ":");
     		
-    		pt.setOntoClass(ontoClass);
-		
-    		ebiOlsRepo.save(pt);
-  
+    		if(!visitedTerms.contains(iri)) {
+    			visitedTerms.add(iri);
+    			// go recursive
+    			this.setIri(iri);
+    			parentLinkList.putAll(this.queryAndStoreOLS(ontoClass));
+    		}		
     		
     	}
     	
@@ -236,5 +162,20 @@ public class EbiOlsConnector implements ExternalServiceConnector {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	public String getIri() {
+		return iri;
+	}
+
+	public void setIri(String iri) {
+		this.iri = iri;
+		try {
+			this.url = new URL(
+					baseUrl+this.iri);
+		} catch (MalformedURLException e1) {
+			e1.printStackTrace();
+		}
+	}
+		
 
 }
