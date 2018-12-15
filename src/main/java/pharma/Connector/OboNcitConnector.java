@@ -151,7 +151,6 @@ public class OboNcitConnector extends AbstractOlsConnector {
 	@Override
 	public void setRepo(Object repo) {
 		this.OboNcitRepo = (OboNcitRepository)repo;
-		
 	}
 
 	@Override

@@ -2,9 +2,7 @@ package pharma.Term;
 
 import javax.persistence.Entity;
 
-
-
 @Entity
-public class MondoTerm extends AbstractTerm {
+public class UniprotTerm extends AbstractTerm {
 
 }

@@ -21,12 +21,14 @@ import pharma.Connector.ExternalServiceConnector;
 import pharma.Connector.MondoConnector;
 import pharma.Connector.NcbiTaxonConnector;
 import pharma.Connector.OboNcitConnector;
+import pharma.Connector.UniprotConnector;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.ChebiRepository;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Repository.MondoRepository;
 import pharma.Repository.NcbiTaxonRepository;
 import pharma.Repository.OboNcitRepository;
+import pharma.Repository.UniprotRepository;
 import pharma.Term.AbstractTerm;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,12 +50,16 @@ public class OLSCallController {
 	
 	@Autowired
 	private MondoRepository mondoRepo;
+
+	@Autowired
+	private UniprotRepository uniprotRepo;
 	
 	private EbiOlsConnector ebiOlsConn;
 	private OboNcitConnector oboNcitConn;
 	private ChebiConnector chebiConn;
 	private MondoConnector mondoConn;
 	private NcbiTaxonConnector ncbiTaxonConn;
+	private UniprotConnector uniprotConn;
 	
 	
 	/**
@@ -98,6 +104,7 @@ public class OLSCallController {
 			mondoConn = new MondoConnector();
 			ncbiTaxonConn = new NcbiTaxonConnector();
 			chebiConn = new ChebiConnector();
+			uniprotConn = new UniprotConnector();
 			
 			// Fetch GO terms
 			updateParentPath(ebiOlsConn, prop.getProperty("ebiols1"), ebiOlsRepo, prop.getProperty("ebiols1").replaceAll(":", ""));
@@ -134,6 +141,8 @@ public class OLSCallController {
 			updateParentPath(chebiConn, prop.getProperty("chebi4"), chebiRepo, "CHEBI");
 			updateParentPath(chebiConn, prop.getProperty("chebi5"), chebiRepo, "CHEBI");
 			
+			// Fetch Uniprot terms
+			updateParentPath(uniprotConn, prop.getProperty("uniprot"), uniprotRepo, "UNIPROT");
 		
 		} catch (Exception e) {
 
@@ -147,7 +156,7 @@ public class OLSCallController {
 
     public String updateParentPath(ExternalServiceConnector esc, String classParentTerm, Object repo, String ontoClass) {
     	
-    	if(classParentTerm.isEmpty() || classParentTerm.equals(null))
+    	if(classParentTerm.isEmpty() || classParentTerm == null)
     		return "{ \"updateStatus\": \"Update parent path ("+esc.toString()+" / Empty term) skipping\"}";
     	
 		HashMap<String, String> urlsOTermParents = new HashMap<String, String>();
@@ -272,7 +281,6 @@ public class OLSCallController {
     	switch(ontology) {
     	case "go":
     		List<AbstractTerm> labelsGo;
-    		System.out.println("OC: "+ontClass);
     		labelsGo = ebiOlsRepo.findBySynonym(label, ontClass);
     		for (Iterator<AbstractTerm> i = labelsGo.iterator(); i.hasNext();) {
     			AbstractTerm item = i.next();
@@ -290,10 +298,40 @@ public class OLSCallController {
     		}     		
     		break;
     	case "mondo":
+    		List<AbstractTerm> labelsMondo;
+    		labelsMondo = mondoRepo.findBySynonym(label);
+    		for (Iterator<AbstractTerm> i = labelsMondo.iterator(); i.hasNext();) {
+    			AbstractTerm item = i.next();
+    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
+    			returnstring = returnstring + ",";
+    		}       		
     		break;
     	case "ncbitaxon":
+    		List<AbstractTerm> labelsNcbiTaxon;
+    		labelsNcbiTaxon = ncbiTaxonRepo.findBySynonym(label);
+    		for (Iterator<AbstractTerm> i = labelsNcbiTaxon.iterator(); i.hasNext();) {
+    			AbstractTerm item = i.next();
+    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
+    			returnstring = returnstring + ",";
+    		}       		
     		break;
     	case "chebi":
+    		List<AbstractTerm> labelsChebi;
+    		labelsChebi = chebiRepo.findBySynonym(label);
+    		for (Iterator<AbstractTerm> i = labelsChebi.iterator(); i.hasNext();) {
+    			AbstractTerm item = i.next();
+    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
+    			returnstring = returnstring + ",";
+    		}       		
+    		break;
+    	case "uniprot":
+    		List<AbstractTerm> labelsUniprot;
+    		labelsUniprot = uniprotRepo.findBySynonym(label);
+    		for (Iterator<AbstractTerm> i = labelsUniprot.iterator(); i.hasNext();) {
+    			AbstractTerm item = i.next();
+    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
+    			returnstring = returnstring + ",";
+    		}       		
     		break;
     	default: return "{error: \"Ontology "+ontology+" not supported.\"}";
     	}

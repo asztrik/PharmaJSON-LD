@@ -12,7 +12,6 @@ import org.json.JSONObject;
 
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Term.AbstractTerm;
-import pharma.Term.EbiOlsTerm;
 
 public abstract class AbstractOlsConnector implements ExternalServiceConnector {
 

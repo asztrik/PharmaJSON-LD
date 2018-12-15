@@ -42,7 +42,18 @@ public abstract class AbstractTerm {
 	
 	// All the Terms need a method that converts them to a JSON
 	// But the exact format / content depends on the FE fields...
-	public abstract JSONObject toJSON();
+    /// you may redefine them at the individual Term Classes
+	public JSONObject toJSON() {
+		JSONObject output = new JSONObject(
+				"{ \"@type\":\"skos:Concept\","
+				+ "\"skos:prefLabel\": [ { \"@value\": "+this.synonym+", "
+				+ "\"@language\":\"eng\"} ], \"rdfs:label\":[ { \"@value\": " 
+				+ this.synonym+", \"@language\":\"eng\" } ],"
+				+ "\"skos:exactMatch\":\""+this.iri+"\"} "
+				);
+		
+		return output;
+	}
 	
 	// getters and setters...
 	
