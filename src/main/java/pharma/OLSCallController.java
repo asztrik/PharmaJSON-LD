@@ -31,6 +31,10 @@ import pharma.Repository.OboNcitRepository;
 import pharma.Repository.UniprotRepository;
 import pharma.Term.AbstractTerm;
 
+//Import log4j classes.
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
@@ -62,6 +66,8 @@ public class OLSCallController {
 	private UniprotConnector uniprotConn;
 	
 	
+    private static final Logger logger = LoggerFactory.getLogger(OLSCallController.class);
+	
 	/**
 	 * TEMPORARY TASK FOR THIS METHOD
 	 * - nothing
@@ -86,6 +92,8 @@ public class OLSCallController {
 	@RequestMapping("/update")
     public String update() {
     	
+		logger.info("Update called.");
+		
 		Properties prop = new Properties();
 		try {
 		    //load a properties file from class path, inside static method
@@ -107,6 +115,7 @@ public class OLSCallController {
 			uniprotConn = new UniprotConnector();
 			
 			// Fetch GO terms
+			logger.info("Fetching EBI OLS terms...");
 			updateParentPath(ebiOlsConn, prop.getProperty("ebiols1"), ebiOlsRepo, prop.getProperty("ebiols1").replaceAll(":", ""));
 			updateParentPath(ebiOlsConn, prop.getProperty("ebiols2"), ebiOlsRepo, prop.getProperty("ebiols2").replaceAll(":", ""));
 			updateParentPath(ebiOlsConn, prop.getProperty("ebiols3"), ebiOlsRepo, prop.getProperty("ebiols3").replaceAll(":", ""));
@@ -114,6 +123,7 @@ public class OLSCallController {
 			updateParentPath(ebiOlsConn, prop.getProperty("ebiols5"), ebiOlsRepo, prop.getProperty("ebiols5").replaceAll(":", ""));
 			
 			// Fetch NCIT terms
+			logger.info("Fetching OBO NCIT terms...");
 			updateParentPath(oboNcitConn, prop.getProperty("oboncit1"), oboNcitRepo, prop.getProperty("oboncit1").replaceAll(":", ""));
 			updateParentPath(oboNcitConn, prop.getProperty("oboncit2"), oboNcitRepo, prop.getProperty("oboncit2").replaceAll(":", ""));
 			updateParentPath(oboNcitConn, prop.getProperty("oboncit3"), oboNcitRepo, prop.getProperty("oboncit3").replaceAll(":", ""));
@@ -121,6 +131,7 @@ public class OLSCallController {
 			updateParentPath(oboNcitConn, prop.getProperty("oboncit5"), oboNcitRepo, prop.getProperty("oboncit5").replaceAll(":", ""));
 			
 			// Fetch Mondo terms
+			logger.info("Fetching MONDO terms...");
 			updateParentPath(mondoConn, prop.getProperty("mondo1"), mondoRepo, "MONDO");
 			updateParentPath(mondoConn, prop.getProperty("mondo2"), mondoRepo, "MONDO");
 			updateParentPath(mondoConn, prop.getProperty("mondo3"), mondoRepo, "MONDO");
@@ -128,6 +139,7 @@ public class OLSCallController {
 			updateParentPath(mondoConn, prop.getProperty("mondo5"), mondoRepo, "MONDO");
 			
 			// Fetch NcbiTaxon terms
+			logger.info("Fetching NCBI TAXON terms...");
 			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon1"), ncbiTaxonRepo, "NCBITAXON");
 			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon2"), ncbiTaxonRepo, "NCBITAXON");
 			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon3"), ncbiTaxonRepo, "NCBITAXON");
@@ -135,6 +147,7 @@ public class OLSCallController {
 			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon5"), ncbiTaxonRepo, "NCBITAXON");
 			
 			// Fetch ChebiTerms
+			logger.info("Fetching CHEBI terms...");
 			updateParentPath(chebiConn, prop.getProperty("chebi1"), chebiRepo, "CHEBI");
 			updateParentPath(chebiConn, prop.getProperty("chebi2"), chebiRepo, "CHEBI");
 			updateParentPath(chebiConn, prop.getProperty("chebi3"), chebiRepo, "CHEBI");
@@ -142,6 +155,7 @@ public class OLSCallController {
 			updateParentPath(chebiConn, prop.getProperty("chebi5"), chebiRepo, "CHEBI");
 			
 			// Fetch Uniprot terms
+			logger.info("Fetching UniProt terms...");
 			updateParentPath(uniprotConn, prop.getProperty("uniprot"), uniprotRepo, "UNIPROT");
 		
 		} catch (Exception e) {
@@ -154,10 +168,14 @@ public class OLSCallController {
     }	
 
 
-    public String updateParentPath(ExternalServiceConnector esc, String classParentTerm, Object repo, String ontoClass) {
+    public void updateParentPath(ExternalServiceConnector esc, String classParentTerm, Object repo, String ontoClass) {
     	
-    	if(classParentTerm.isEmpty() || classParentTerm == null)
-    		return "{ \"updateStatus\": \"Update parent path ("+esc.toString()+" / Empty term) skipping\"}";
+    	logger.info(" Updating " + classParentTerm + " in " + ontoClass);
+    	
+    	if(classParentTerm.isEmpty() || classParentTerm == null) {
+    		logger.warn("Class parent term is empty, exiting.");
+    		return;
+    	}
     	
 		HashMap<String, String> urlsOTermParents = new HashMap<String, String>();
 		
@@ -169,7 +187,7 @@ public class OLSCallController {
 			urlsOTermParents.putAll(esc.queryAndStoreOLS(ontoClass));
 		
 			for(Entry<String, String> entry : urlsOTermParents.entrySet()) {
-				System.out.println("getParentByURL: "+entry.getValue()+" - "+entry.getKey());
+				logger.info("GetParentByURL: "+entry.getValue()+" - "+entry.getKey());
 				esc.linkParents(entry.getValue(), entry.getKey());
 			}
 		
@@ -177,10 +195,12 @@ public class OLSCallController {
 		} catch (ExternalServiceConnectorException e) {
 
 			e.printStackTrace();
-			return "{ \"updateStatus\": \"Update parent path ("+esc.toString()+" / "+classParentTerm+") failed\"}";
+			logger.warn("Update failed.");
+			return;
 		}
 		// Report Success.
-		return "{ \"updateStatus\": \"Update parent path ("+esc.toString()+" / "+classParentTerm+") success\"}";
+		logger.info("Update successful.");
+		return;
     	
     }		
 	
@@ -198,7 +218,7 @@ public class OLSCallController {
     		@RequestParam(value="parent", defaultValue="C60743") String parent,
     		@RequestParam(value="ontology", defaultValue="ncit") String ontology,
     		@RequestParam(value="class", defaultValue="") String ontoClass) {
- 	
+    	
     	// create a Set to uniquely store the found parents
     	Set<AbstractTerm> parents = new HashSet<AbstractTerm>();
     	List<AbstractTerm> parent_ids = new ArrayList<AbstractTerm>();
@@ -209,40 +229,42 @@ public class OLSCallController {
     	switch(ontology) {
     	case "go":
     		parents.addAll(ebiOlsRepo.findByIri(parent));
-    		System.out.println("Parent IRI: "+parent);
+    		logger.info("GetChildren Parent IRI: "+parent);
     		for(AbstractTerm t : parents) {
     			parent_ids = ebiOlsRepo.findByParent(t, ontoClass);
     		}
     		break;
     	case "ncit":
     		parents.addAll(oboNcitRepo.findByIri(parent));
-    		System.out.println("Parent IRI: "+parent);
+    		logger.info("GetChildren Parent IRI: "+parent);
     		for(AbstractTerm t : parents) {
     			parent_ids = oboNcitRepo.findByParent(t, ontoClass);
     		}
     		break;
     	case "ncbitaxon":
     		parents.addAll(ncbiTaxonRepo.findByIri(parent));
-    		System.out.println("Parent IRI: "+parent);
+    		logger.info("GetChildren Parent IRI: "+parent);
     		for(AbstractTerm t : parents) {
     			parent_ids = ncbiTaxonRepo.findByParent(t);
     		}
     		break;
     	case "mondo":
     		parents.addAll(mondoRepo.findByIri(parent));
-    		System.out.println("Parent IRI: "+parent);
+    		logger.info("GetChildren Parent IRI: "+parent);
     		for(AbstractTerm t : parents) {
     			parent_ids = mondoRepo.findByParent(t);
     		}
     		break;
     	case "chebi":
     		parents.addAll(chebiRepo.findByIri(parent));
-    		System.out.println("Parent IRI: "+parent);
+    		logger.info("GetChildren Parent IRI: "+parent);
     		for(AbstractTerm t : parents) {
     			parent_ids = chebiRepo.findByParent(t);
     		}
     		break;
-    	default: return "{error: \"Ontology "+ontology+" not supported.\"}";
+    	default: 
+    		logger.warn("Ontology "+ontology+" not supported.");
+    		return "{error: \"Ontology "+ontology+" not supported.\"}";
     	}
     	
 		int elemCount = 1;
@@ -254,7 +276,7 @@ public class OLSCallController {
 		}
     	
     	returnString = returnString + "] }";
-    	
+    	logger.info("Returned : "+elemCount+ " terms.");
     	return returnString;
     	
     }
@@ -274,9 +296,10 @@ public class OLSCallController {
     		@RequestParam(value="ontology", defaultValue="go") String ontology,
     		@RequestParam(value="class", defaultValue="") String ontClass) {      
 		
-    	String returnstring = "{\"@context\": { \"GOCellComp\": \"http://purl.obolibrary.org/obo/GO_0005575\" }," + 
+    	String returnstring = "{\"@context\": \""+ontology+((ontClass.isEmpty() || ontClass == null)?"":":")+ontClass+"\"," + 
     			"\""+label+"\": [ ";
 	
+    	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
     	
     	switch(ontology) {
     	case "go":
@@ -286,6 +309,7 @@ public class OLSCallController {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
     			returnstring = returnstring + ",";
+    			logger.info("Suggest hit: " + item.getIri());
     		}     		
     		break;
     	case "ncit": 
@@ -295,6 +319,7 @@ public class OLSCallController {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
     			returnstring = returnstring + ",";
+    			logger.info("Suggest hit: " + item.getIri());
     		}     		
     		break;
     	case "mondo":
@@ -304,6 +329,7 @@ public class OLSCallController {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
     			returnstring = returnstring + ",";
+    			logger.info("Suggest hit: " + item.getIri());
     		}       		
     		break;
     	case "ncbitaxon":
@@ -313,6 +339,7 @@ public class OLSCallController {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
     			returnstring = returnstring + ",";
+    			logger.info("Suggest hit: " + item.getIri());
     		}       		
     		break;
     	case "chebi":
@@ -322,6 +349,7 @@ public class OLSCallController {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
     			returnstring = returnstring + ",";
+    			logger.info("Suggest hit: " + item.getIri());
     		}       		
     		break;
     	case "uniprot":
@@ -331,9 +359,12 @@ public class OLSCallController {
     			AbstractTerm item = i.next();
     			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
     			returnstring = returnstring + ",";
+    			logger.info("Suggest hit: " + item.getIri());
     		}       		
     		break;
-    	default: return "{error: \"Ontology "+ontology+" not supported.\"}";
+    	default:
+    		logger.warn("Ontology "+ontology+" not supported.");
+    		return "{error: \"Ontology "+ontology+" not supported.\"}";
     	}
 		
     	

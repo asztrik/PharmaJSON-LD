@@ -16,7 +16,7 @@ public class UniprotHandler extends DefaultHandler {
 	boolean bProtein = false;
 	boolean bRecommendedName = false;
 	boolean bAlternativeName = false;
-	
+	boolean bFullName = false;
 	
 	private ArrayList<UniprotTerm> uniprotTermList = new ArrayList<UniprotTerm>();
 	private UniprotTerm uniprotTerm = null;
@@ -42,6 +42,8 @@ public class UniprotHandler extends DefaultHandler {
 			bRecommendedName = true;
 		} else if(qName.equalsIgnoreCase("alternativeName")) {
 			bAlternativeName = true;
+		} else if(qName.equalsIgnoreCase("fullName")) {
+			bFullName = true;
 		}
 	}
 
@@ -62,10 +64,11 @@ public class UniprotHandler extends DefaultHandler {
 			bRecommendedName = false;
 		} else if(qName.equalsIgnoreCase("alternativeName")) {
 			bAlternativeName = false;
+		} else if(qName.equalsIgnoreCase("fullName")) {
+			bFullName = false;
 		}
 		 
 	}
-	
 	
 	/**
 	 * Specifies what should happen on trigger
@@ -77,28 +80,23 @@ public class UniprotHandler extends DefaultHandler {
 		/// If we get to "entry", a new term begins, reset everything
 		if(bEntry) {
 			if(uniprotTerm != null) {
-				uniprotTermList.add(uniprotTerm);
-				System.out.println("Entry closed..");				
+				uniprotTermList.add(uniprotTerm);			
 			}
 			uniprotTerm = new UniprotTerm();
-			System.out.println("Entry found..");
 			bEntry = false;
 			bAccession = false;
 			bProtein = false;
 			bRecommendedName = false;
+			bFullName = false;
 			bAlternativeName = false;
 		}
 		
 		/// Next the fields of a term. We assume they are inside of an "entry"
 		if(bAccession) {
-			System.out.println("Acc found..");
 			uniprotTerm.setIri(new String(ch, start, length));
-			System.out.println(uniprotTerm.getIri());
 		}
 		
-		if(bProtein && bRecommendedName) {
-			
-			System.out.println("Protein found..");
+		if(bProtein && bRecommendedName && bFullName) {
 			
 			if(uniprotTerm.getLabel() == null)
 				uniprotTerm.setLabel(new String(ch, start, length));
@@ -106,7 +104,7 @@ public class UniprotHandler extends DefaultHandler {
 				uniprotTerm.setLabel(uniprotTerm.getLabel() + " -- " + new String(ch, start, length));
 		}
 		
-		if(bProtein && bAlternativeName) {
+		if(bProtein && bAlternativeName && bFullName) {
 			
 			if(uniprotTerm.getSynonym() == null)
 				uniprotTerm.setSynonym(new String(ch, start, length));

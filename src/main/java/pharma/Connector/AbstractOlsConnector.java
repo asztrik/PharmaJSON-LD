@@ -9,7 +9,10 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import pharma.OLSCallController;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Term.AbstractTerm;
 
@@ -22,6 +25,8 @@ public abstract class AbstractOlsConnector implements ExternalServiceConnector {
 	protected String iri;
 	
 	protected static ArrayList<String> visitedTerms = new ArrayList<String>();
+	
+    private static final Logger logger = LoggerFactory.getLogger(AbstractOlsConnector.class);
 	
 	/**
 	 * Connects to the url set for this class and retrieves all the terms to one IRI as JSONArray
@@ -98,7 +103,7 @@ public abstract class AbstractOlsConnector implements ExternalServiceConnector {
 		pt.setSynonym(labelString);
 		pt.setOntoClass(ontoClass);
 		
-		System.out.println("Retrieved: " + pt.getIri());
+		logger.info("Retrieved: " + pt.getIri());
 		
 		return pt;
 	

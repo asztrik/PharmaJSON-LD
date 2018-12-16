@@ -44,13 +44,28 @@ public abstract class AbstractTerm {
 	// But the exact format / content depends on the FE fields...
     /// you may redefine them at the individual Term Classes
 	public JSONObject toJSON() {
-		JSONObject output = new JSONObject(
-				"{ \"@type\":\"skos:Concept\","
-				+ "\"skos:prefLabel\": [ { \"@value\": "+this.synonym+", "
-				+ "\"@language\":\"eng\"} ], \"rdfs:label\":[ { \"@value\": " 
-				+ this.synonym+", \"@language\":\"eng\" } ],"
-				+ "\"skos:exactMatch\":\""+this.iri+"\"} "
-				);
+		
+		// create base JSON-LD
+		JSONObject output = new JSONObject();
+		
+		// add type, fixed
+		output.append("@type", "skos:Concept");
+		// add an ID, which is the IRI of the term
+		output.append("@ID", this.iri);
+		
+		// sub-object for storing the label + language info
+		JSONObject labelObject = new JSONObject();		
+		labelObject.put("@value", this.label);
+		labelObject.put("@language", "@eng");
+		
+		output.append("skos:prefLabel", labelObject);
+		
+		// sub-object for storing the label + language info		
+		JSONObject synonymObject = new JSONObject();		
+		synonymObject.put("@value", this.synonym);
+		synonymObject.put("@language", "@eng");
+		
+		output.append("skos:altLabel", synonymObject);
 		
 		return output;
 	}

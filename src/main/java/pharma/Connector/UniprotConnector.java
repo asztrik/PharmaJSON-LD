@@ -42,6 +42,9 @@ public class UniprotConnector implements ExternalServiceConnector {
 	    	for (Iterator<UniprotTerm> i = uniprotHandler.getTerms().iterator(); i.hasNext();) {
 	    	    UniprotTerm term = i.next();
 	    	    term.setOntoClass(ontoClass);
+	    	    /// if thereis no synonym, set the field to the label so we do not get an invalid JSON
+	    	    if(term.getSynonym() == null || term.getSynonym().isEmpty())
+	    	    	term.setSynonym(term.getLabel());
 	    		this.UniProtRepo.save(term);
 	    	}
 		
