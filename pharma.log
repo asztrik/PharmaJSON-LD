@@ -1241,3 +1241,9 @@ org.json.JSONException: Expected a ',' or '}' at 60 [character 61 line 1]
 2018-12-17 00:47:44.222  INFO 12165 --- [http-nio-9999-exec-7] pharma.OLSCallController                 : Suggest hit: Q2T9X5
 2018-12-17 00:47:44.222  INFO 12165 --- [http-nio-9999-exec-7] pharma.OLSCallController                 : Suggest hit: Q5SS90
 2018-12-17 00:47:44.222  INFO 12165 --- [http-nio-9999-exec-7] pharma.OLSCallController                 : Suggest hit: Q2T9X5
+2018-12-17 00:51:01.829  INFO 12165 --- [Thread-2] ConfigServletWebServerApplicationContext : Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@5167f57d: startup date [Mon Dec 17 00:38:00 CET 2018]; root of context hierarchy
+2018-12-17 00:51:01.831  INFO 12165 --- [Thread-2] o.s.j.e.a.AnnotationMBeanExporter        : Unregistering JMX-exposed beans on shutdown
+2018-12-17 00:51:01.832  INFO 12165 --- [Thread-2] o.s.j.e.a.AnnotationMBeanExporter        : Unregistering JMX-exposed beans
+2018-12-17 00:51:01.833  INFO 12165 --- [Thread-2] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2018-12-17 00:51:01.837  INFO 12165 --- [Thread-2] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2018-12-17 00:51:01.844  INFO 12165 --- [Thread-2] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

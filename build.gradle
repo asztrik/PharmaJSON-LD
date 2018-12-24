@@ -22,10 +22,19 @@ bootJar {
 repositories {
     mavenCentral()
     maven { url "https://repository.jboss.org/nexus/content/repositories/releases" }
+    maven { url 'http://repo.spring.io/libs-snapshot-continuous-local'  }
 }
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+
+
+dependencies {
+
+} 
+repositories {
+
+}
 
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
@@ -36,11 +45,14 @@ dependencies {
     compile 'ch.qos.logback:logback-classic:1.2.3'
     compile 'ch.qos.logback:logback-core:1.2.3'
     compile 'org.slf4j:slf4j-api:1.7.25'
+    compile("org.springframework.data:spring-data-neo4j")
+    compile 'org.neo4j:neo4j-ogm-http-driver:3.1.5'    
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.0'
     compile group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0'
     compile group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.3.0'
     compile group: 'javax.activation', name: 'activation', version: '1.1.1'    
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('javax.xml.bind:jaxb-api')
+    testCompile(group: 'org.neo4j', name: 'neo4j-ogm-test', version: '1.0.0.BUILD-SNAPSHOT', classifier: 'tests')
 }
 
