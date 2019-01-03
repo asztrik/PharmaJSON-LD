@@ -86,7 +86,9 @@ public abstract class AbstractOlsConnector implements ExternalServiceConnector {
 		// Create Entity that will be persisted
 		pt.setIri(term.getString("iri"));
 				
-		String labelString = "\"" + term.getString("label") ;
+		String labelString = "\"" + term.getString("label");
+		
+		pt.setLabel(term.getString("label"));
 		
 		try {
     		JSONArray synonymsObj = term.getJSONArray("synonyms");
