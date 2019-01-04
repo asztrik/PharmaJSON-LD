@@ -9,6 +9,9 @@ import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.OboNcitRepository;
@@ -20,6 +23,8 @@ public class OboNcitConnector extends AbstractOlsConnector {
 	protected OboNcitRepository OboNcitRepo;
 	
 	protected final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/ncit/children?id=";
+	
+    private static final Logger logger = LoggerFactory.getLogger(OboNcitConnector.class);
 	
 	public OboNcitConnector() {	}	
 	
@@ -117,10 +122,12 @@ public class OboNcitConnector extends AbstractOlsConnector {
     		term = (OboNcitTerm)retrieveTerm(terms, i,  ontoClass, term);
     		
     		parentLinkList.put( term.getIri(), terms.getJSONObject(i).getJSONObject("_links").getJSONObject("parents").getString("href"));
-    		
-    		
-    		OboNcitRepo.save(term);
-    		
+    		  		
+    		try {
+        		OboNcitRepo.save(term);
+    		} catch (DataIntegrityViolationException e) {
+    			logger.info(term.getIri() + " - duplicate IRI, not saved.");
+    		}    		
     		
     		// Now get the iri
     		String iri = term.getIri();

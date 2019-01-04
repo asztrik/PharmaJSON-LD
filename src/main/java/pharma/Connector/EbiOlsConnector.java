@@ -9,6 +9,9 @@ import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import pharma.Exception.ExternalServiceConnectorException;
@@ -22,6 +25,8 @@ public class EbiOlsConnector extends AbstractOlsConnector {
 	protected EbiOlsRepository ebiOlsRepo;
 	
 	protected final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/go/children?id=";
+	
+    private static final Logger logger = LoggerFactory.getLogger(EbiOlsConnector.class);
 	
 	public EbiOlsConnector() {	}	
 	
@@ -120,9 +125,11 @@ public class EbiOlsConnector extends AbstractOlsConnector {
     		
     		parentLinkList.put( term.getIri(), terms.getJSONObject(i).getJSONObject("_links").getJSONObject("parents").getString("href"));
     		
-    		
-    		ebiOlsRepo.save(term);
-    		
+    		try {
+        		ebiOlsRepo.save(term);
+    		} catch (DataIntegrityViolationException e) {
+    			logger.info(term.getIri() + " - duplicate IRI, not saved.");
+    		}    		
     		
     		// Now get the iri
     		String iri = term.getIri();

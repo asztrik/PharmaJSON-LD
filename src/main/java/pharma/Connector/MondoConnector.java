@@ -7,8 +7,12 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.MondoRepository;
@@ -20,6 +24,8 @@ public class MondoConnector extends AbstractOlsConnector {
 	protected MondoRepository MondoRepo;
 	
 	protected final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/mondo/children?id=";
+	
+    private static final Logger logger = LoggerFactory.getLogger(MondoConnector.class);
 	
 	public MondoConnector() {	}	
 	
@@ -118,8 +124,11 @@ public class MondoConnector extends AbstractOlsConnector {
     		
     		parentLinkList.put( term.getIri(), terms.getJSONObject(i).getJSONObject("_links").getJSONObject("parents").getString("href"));
     		
-    		
-    		MondoRepo.save(term);
+    		try {
+    			MondoRepo.save(term);
+    		} catch (DataIntegrityViolationException e) {
+    			logger.info(term.getIri() + " - duplicate IRI, not saved.");
+    		}
     		
     		
     		// Now get the iri

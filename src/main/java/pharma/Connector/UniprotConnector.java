@@ -6,6 +6,10 @@ import java.util.Iterator;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.xml.sax.InputSource;
 
 
@@ -20,6 +24,8 @@ public class UniprotConnector implements ExternalServiceConnector {
 	protected UniprotRepository UniProtRepo;
 	
 	private String xmlUrlBase = "https://www.uniprot.org/uniprot/?query=reviewed:yes&format=xml&limit=10";
+	
+    private static final Logger logger = LoggerFactory.getLogger(UniprotConnector.class);
 	
 	public UniprotConnector() {	}
 	
@@ -45,7 +51,11 @@ public class UniprotConnector implements ExternalServiceConnector {
 	    	    /// if thereis no synonym, set the field to the label so we do not get an invalid JSON
 	    	    if(term.getSynonym() == null || term.getSynonym().isEmpty())
 	    	    	term.setSynonym(term.getLabel());
-	    		this.UniProtRepo.save(term);
+	    		try {
+		    		this.UniProtRepo.save(term);
+	    		} catch (DataIntegrityViolationException e) {
+	    			logger.info(term.getIri() + " - duplicate IRI, not saved.");
+	    		}
 	    	}
 		
 	    } catch (Exception e) {

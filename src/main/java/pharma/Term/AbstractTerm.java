@@ -21,10 +21,11 @@ public abstract class AbstractTerm {
 	
 	// An Id is needed for the Persistence API
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	protected Integer id;
 
 	// Here are the fields that all the Terms have
+	@Column(unique=true)
 	protected String iri;
 	
 	protected String label;
