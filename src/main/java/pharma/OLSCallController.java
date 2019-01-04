@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import pharma.Connector.BaoConnector;
 import pharma.Connector.ChebiConnector;
 import pharma.Connector.EbiOlsConnector;
 import pharma.Connector.ExternalServiceConnector;
@@ -23,6 +24,7 @@ import pharma.Connector.NcbiTaxonConnector;
 import pharma.Connector.OboNcitConnector;
 import pharma.Connector.UniprotConnector;
 import pharma.Exception.ExternalServiceConnectorException;
+import pharma.Repository.BaoRepository;
 import pharma.Repository.ChebiRepository;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Repository.MondoRepository;
@@ -59,6 +61,9 @@ public class OLSCallController {
 
 	@Autowired
 	private UniprotRepository uniprotRepo;
+
+	@Autowired
+	private BaoRepository baoRepo;
 	
 	private EbiOlsConnector ebiOlsConn;
 	private OboNcitConnector oboNcitConn;
@@ -66,29 +71,13 @@ public class OLSCallController {
 	private MondoConnector mondoConn;
 	private NcbiTaxonConnector ncbiTaxonConn;
 	private UniprotConnector uniprotConn;
+	private BaoConnector baoConn;
 	
 	
     private static final Logger logger = LoggerFactory.getLogger(OLSCallController.class);
 	
 	/**
-	 * TEMPORARY TASK FOR THIS METHOD
-	 * - nothing
-	 * 
-	 * WHAT IT SHOULD DO
-	 * - go IRI to IRI in the DB and check them against the OLS
-	 * - should have an optional IRI parameter
-	 * - consider renaming! (update(IRI) and regularUpdate()...)
-	 * 
-	 * update(IRI):
-     * create_new_if_not_exists(IRI)
-     * save_labels(IRI)
-     * update_parent_path(IRI)
-     * children = get_children(IRI)
-     * foreach child_IRI in children {
-     *   set_child(IRI, child_IRI)
-     *   update(child_IRI)
-     * }
-	 * 
+     * Updates terms based on the list in application.properties
 	 * 
 	 **/
 	@RequestMapping("/update")
@@ -115,6 +104,7 @@ public class OLSCallController {
 			ncbiTaxonConn = new NcbiTaxonConnector();
 			chebiConn = new ChebiConnector();
 			uniprotConn = new UniprotConnector();
+			baoConn = new BaoConnector();
 			
 			// Fetch GO terms
 			logger.info("Fetching EBI OLS terms...");
@@ -159,7 +149,15 @@ public class OLSCallController {
 			// Fetch Uniprot terms
 			logger.info("Fetching UniProt terms...");
 			updateParentPath(uniprotConn, prop.getProperty("uniprot"), uniprotRepo, "UNIPROT");
-		
+			
+			// Fetch BAOTerms
+			logger.info("Fetching BAO terms...");
+			for(int i = 1; i < 18; i++) {
+				logger.info("bao"+String.valueOf(i));
+				updateParentPath(baoConn, prop.getProperty("bao"+String.valueOf(i)), baoRepo, prop.getProperty("bao"+String.valueOf(i)));
+			}	
+			
+			
 		} catch (Exception e) {
 
 			e.printStackTrace();
@@ -365,6 +363,11 @@ public class OLSCallController {
     		labelsUniprot = uniprotRepo.findBySynonym(label);
     		terms = collectTerms(labelsUniprot);     		
     		break;
+    	case "bao":
+    		List<AbstractTerm> labelsBao;
+    		labelsBao = baoRepo.findBySynonym(label, ontClass);
+    		terms = collectTerms(labelsBao);     		
+    		break;   			
     	default:
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
