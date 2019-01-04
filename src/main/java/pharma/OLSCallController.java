@@ -31,6 +31,8 @@ import pharma.Repository.OboNcitRepository;
 import pharma.Repository.UniprotRepository;
 import pharma.Term.AbstractTerm;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 //Import log4j classes.
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,10 +207,10 @@ public class OLSCallController {
     }		
 	
 	/**
+	 * WARNING!
 	 * 
-	 * WHAT IT SHOULD DO
-	 * - query persisted
-	 * - return subtree of the found IRI
+	 * METHOD NOT COMPLETED, FUNCTIONALITY STILL UNDER DISCUSSION
+	 * the current state represents a temporary, experimental method
 	 * 
 	 * @param iri
 	 * @return
@@ -282,6 +284,30 @@ public class OLSCallController {
     }
 	
     /**
+     * Helper function to build the resulting JSON resonse for SUGGEST
+     * @param labels
+     * @return
+     */
+    public JSONArray collectTerms(List<AbstractTerm> labels) {
+    	
+    	JSONArray output = new JSONArray();
+    	
+		for (Iterator<AbstractTerm> i = labels.iterator(); i.hasNext();) {
+			AbstractTerm item = i.next();
+			
+			output.put(item.toJSON());
+			
+			logger.info("Suggest hit: " + item.getIri());
+		}
+		
+		return output;
+    }
+    
+    
+    
+    
+    
+    /**
      * 
      * WHAT IT DOES:
      * - query persisted data
@@ -294,10 +320,17 @@ public class OLSCallController {
     public String suggest(
     		@RequestParam(value="label", defaultValue="extra") String label,
     		@RequestParam(value="ontology", defaultValue="go") String ontology,
-    		@RequestParam(value="class", defaultValue="") String ontClass) {      
+    		@RequestParam(value="class", defaultValue="") String ontClass,
+			@RequestParam(value="limit", defaultValue="") String limit) {      
+		
+		JSONObject response = new JSONObject();
+		
+		response.append("@context", ontology+((ontClass.isEmpty() || ontClass == null)?"":":")+ontClass);
 		
     	String returnstring = "{\"@context\": \""+ontology+((ontClass.isEmpty() || ontClass == null)?"":":")+ontClass+"\"," + 
     			"\""+label+"\": [ ";
+    	
+    	JSONArray terms = new JSONArray();
 	
     	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
     	
@@ -305,76 +338,52 @@ public class OLSCallController {
     	case "go":
     		List<AbstractTerm> labelsGo;
     		labelsGo = ebiOlsRepo.findBySynonym(label, ontClass);
-    		for (Iterator<AbstractTerm> i = labelsGo.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}     		
+    		terms = collectTerms(labelsGo);		
     		break;
     	case "ncit": 
     		List<AbstractTerm> labelsNcit;
     		labelsNcit = oboNcitRepo.findBySynonym(label, ontClass);
-    		for (Iterator<AbstractTerm> i = labelsNcit.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}     		
+    		terms = collectTerms(labelsNcit);  		
     		break;
     	case "mondo":
     		List<AbstractTerm> labelsMondo;
     		labelsMondo = mondoRepo.findBySynonym(label);
-    		for (Iterator<AbstractTerm> i = labelsMondo.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}       		
+    		terms = collectTerms(labelsMondo);     		
     		break;
     	case "ncbitaxon":
     		List<AbstractTerm> labelsNcbiTaxon;
     		labelsNcbiTaxon = ncbiTaxonRepo.findBySynonym(label);
-    		for (Iterator<AbstractTerm> i = labelsNcbiTaxon.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}       		
+    		terms = collectTerms(labelsNcbiTaxon);        		
     		break;
     	case "chebi":
     		List<AbstractTerm> labelsChebi;
     		labelsChebi = chebiRepo.findBySynonym(label);
-    		for (Iterator<AbstractTerm> i = labelsChebi.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}       		
+    		terms = collectTerms(labelsChebi);        		
     		break;
     	case "uniprot":
     		List<AbstractTerm> labelsUniprot;
     		labelsUniprot = uniprotRepo.findBySynonym(label);
-    		for (Iterator<AbstractTerm> i = labelsUniprot.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}       		
+    		terms = collectTerms(labelsUniprot);     		
     		break;
     	default:
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
     	}
 		
+    	/** 
+    	 * Limit - handling, experimental feature!
+    	 */
+    	if(limit.isEmpty()) {
+    		response.append(label, terms);
+    	} else {
+    	JSONArray limitedTerms = new JSONArray();
+	    	for(int i = 0; i < Integer.parseInt(limit); i++) {
+	    		limitedTerms.put(terms.get(i));
+	    	}
+	    	response.append(label, limitedTerms);
+    	}
     	
-		// remove last comma
-		returnstring = returnstring.substring(0, returnstring.length()-1);
-		
-    	//Add end of JSON wrapper
-		returnstring = returnstring + " ] }";
-		
-    	return returnstring;
+    	return response.toString();
     	
     }
 
