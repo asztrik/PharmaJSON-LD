@@ -7,7 +7,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 
-import org.hibernate.exception.ConstraintViolationException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;

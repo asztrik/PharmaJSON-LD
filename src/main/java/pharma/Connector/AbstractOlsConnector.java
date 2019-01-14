@@ -12,7 +12,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import pharma.OLSCallController;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Term.AbstractTerm;
 

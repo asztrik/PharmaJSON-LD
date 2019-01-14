@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import pharma.Connector.BaoConnector;
+import pharma.Connector.CellosaurusConnector;
 import pharma.Connector.ChebiConnector;
 import pharma.Connector.EbiOlsConnector;
 import pharma.Connector.ExternalServiceConnector;
@@ -25,6 +26,7 @@ import pharma.Connector.OboNcitConnector;
 import pharma.Connector.UniprotConnector;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.BaoRepository;
+import pharma.Repository.CellosaurusRepository;
 import pharma.Repository.ChebiRepository;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Repository.MondoRepository;
@@ -64,6 +66,9 @@ public class OLSCallController {
 
 	@Autowired
 	private BaoRepository baoRepo;
+
+	@Autowired
+	private CellosaurusRepository cellosaurusRepo;
 	
 	private EbiOlsConnector ebiOlsConn;
 	private OboNcitConnector oboNcitConn;
@@ -72,6 +77,7 @@ public class OLSCallController {
 	private NcbiTaxonConnector ncbiTaxonConn;
 	private UniprotConnector uniprotConn;
 	private BaoConnector baoConn;
+	private CellosaurusConnector cellosaurusConn;
 	
 	
     private static final Logger logger = LoggerFactory.getLogger(OLSCallController.class);
@@ -105,8 +111,9 @@ public class OLSCallController {
 			chebiConn = new ChebiConnector();
 			uniprotConn = new UniprotConnector();
 			baoConn = new BaoConnector();
+			cellosaurusConn = new CellosaurusConnector();
 			
-			// Fetch GO terms
+			/*// Fetch GO terms
 			logger.info("Fetching EBI OLS terms...");
 			updateParentPath(ebiOlsConn, prop.getProperty("ebiols1"), ebiOlsRepo, prop.getProperty("ebiols1").replaceAll(":", ""));
 			updateParentPath(ebiOlsConn, prop.getProperty("ebiols2"), ebiOlsRepo, prop.getProperty("ebiols2").replaceAll(":", ""));
@@ -156,6 +163,14 @@ public class OLSCallController {
 				logger.info("bao"+String.valueOf(i));
 				updateParentPath(baoConn, prop.getProperty("bao"+String.valueOf(i)), baoRepo, prop.getProperty("bao"+String.valueOf(i)));
 			}	
+			*/
+			// Fetch CellosaurusTerms
+			logger.info("Fetching Cellosaurus terms...");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus1"), cellosaurusRepo, "CELLOSAURUS");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus2"), cellosaurusRepo, "CELLOSAURUS");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus3"), cellosaurusRepo, "CELLOSAURUS");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus4"), cellosaurusRepo, "CELLOSAURUS");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus5"), cellosaurusRepo, "CELLOSAURUS");
 			
 			
 		} catch (Exception e) {
@@ -262,6 +277,20 @@ public class OLSCallController {
     			parent_ids = chebiRepo.findByParent(t);
     		}
     		break;
+    	case "bao":
+    		parents.addAll(baoRepo.findByIri(parent));
+    		logger.info("GetChildren Parent IRI: "+parent);
+    		for(AbstractTerm t : parents) {
+    			parent_ids = baoRepo.findByParent(t, ontoClass);
+    		}
+    		break;    		
+    	case "cellosaurus":
+    		parents.addAll(cellosaurusRepo.findByIri(parent));
+    		logger.info("GetChildren Parent IRI: "+parent);
+    		for(AbstractTerm t : parents) {
+    			parent_ids = cellosaurusRepo.findByParent(t);
+    		}
+    		break;    		
     	default: 
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
@@ -289,6 +318,11 @@ public class OLSCallController {
     public JSONArray collectTerms(List<AbstractTerm> labels) {
     	
     	JSONArray output = new JSONArray();
+
+    	if(labels == null)
+    		return output; // empty list: give empty JSON back.
+
+
     	
 		for (Iterator<AbstractTerm> i = labels.iterator(); i.hasNext();) {
 			AbstractTerm item = i.next();
@@ -324,50 +358,52 @@ public class OLSCallController {
 		JSONObject response = new JSONObject();
 		
 		response.append("@context", ontology+((ontClass.isEmpty() || ontClass == null)?"":":")+ontClass);
-		
-    	String returnstring = "{\"@context\": \""+ontology+((ontClass.isEmpty() || ontClass == null)?"":":")+ontClass+"\"," + 
-    			"\""+label+"\": [ ";
-    	
+		   	
     	JSONArray terms = new JSONArray();
 	
     	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
     	
     	switch(ontology) {
     	case "go":
-    		List<AbstractTerm> labelsGo;
+    		List<AbstractTerm> labelsGo = null;
     		labelsGo = ebiOlsRepo.findBySynonym(label, ontClass);
     		terms = collectTerms(labelsGo);		
     		break;
     	case "ncit": 
-    		List<AbstractTerm> labelsNcit;
+    		List<AbstractTerm> labelsNcit = null;
     		labelsNcit = oboNcitRepo.findBySynonym(label, ontClass);
     		terms = collectTerms(labelsNcit);  		
     		break;
     	case "mondo":
-    		List<AbstractTerm> labelsMondo;
+    		List<AbstractTerm> labelsMondo = null;
     		labelsMondo = mondoRepo.findBySynonym(label);
     		terms = collectTerms(labelsMondo);     		
     		break;
     	case "ncbitaxon":
-    		List<AbstractTerm> labelsNcbiTaxon;
+    		List<AbstractTerm> labelsNcbiTaxon = null;
     		labelsNcbiTaxon = ncbiTaxonRepo.findBySynonym(label);
     		terms = collectTerms(labelsNcbiTaxon);        		
     		break;
     	case "chebi":
-    		List<AbstractTerm> labelsChebi;
+    		List<AbstractTerm> labelsChebi = null;
     		labelsChebi = chebiRepo.findBySynonym(label);
     		terms = collectTerms(labelsChebi);        		
     		break;
     	case "uniprot":
-    		List<AbstractTerm> labelsUniprot;
+    		List<AbstractTerm> labelsUniprot = null;
     		labelsUniprot = uniprotRepo.findBySynonym(label);
     		terms = collectTerms(labelsUniprot);     		
     		break;
     	case "bao":
-    		List<AbstractTerm> labelsBao;
+    		List<AbstractTerm> labelsBao = null;
     		labelsBao = baoRepo.findBySynonym(label, ontClass);
     		terms = collectTerms(labelsBao);     		
-    		break;   			
+    		break;
+    	case "cellosaurus":
+    		List<AbstractTerm> labelsCellosaurus = null;
+    		labelsBao = cellosaurusRepo.findBySynonym(label);
+    		terms = collectTerms(labelsCellosaurus);     		
+    		break;      		
     	default:
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
