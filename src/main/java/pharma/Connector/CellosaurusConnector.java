@@ -3,6 +3,7 @@ package pharma.Connector;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,9 +31,13 @@ public class CellosaurusConnector implements ExternalServiceConnector {
 	
     private static final Logger logger = LoggerFactory.getLogger(CellosaurusConnector.class);
     
+    protected static ArrayList<String> visitedTerms = new ArrayList<String>();
+    
     private String iri;
     
     private URL url;
+    
+    protected static HashMap<String, String> parentLinkList = new HashMap<String, String>();
 	
 	public CellosaurusConnector() {	}
 	
@@ -52,41 +57,81 @@ public class CellosaurusConnector implements ExternalServiceConnector {
 	public HashMap<String, String> queryAndStoreOLS(String ontoClass) throws ExternalServiceConnectorException {
 
 		Document doc = null;
-		HashMap<String, String> parentLinkList = new HashMap<String, String>();
+		
 		
 		try {
 			doc = Jsoup.connect(url.toString()).get();
 		} catch (IOException e) {
 			e.printStackTrace();
+			return parentLinkList;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return parentLinkList;
 		}
 		
 		
 		String title = doc.title();
 
-	    Elements inputElements = doc.getElementsByTag("th");  
-	    for (Element inputElement : inputElements) {   
-	    	if(inputElement.text().equals("Hierarchy")) {
-	    		// Gets "Parent: + IRI
-		        System.out.println(" "+inputElement.nextElementSibling().text());
-	    	}
-	    } 
-		
 		CellosaurusTerm term = new CellosaurusTerm();
 		
-		term.setIri(iri);
+		term.setIri(url.toString());
 		term.setLabel(title);
+		term.setOntoClass(ontoClass);
 		
-		//parentLinkList.put(UrlBase+parent, iri);
-	
+		
 		try {
 			CellosaurusRepo.save(term);
 		} catch (DataIntegrityViolationException e) {
 			logger.info(term.getIri() + " - duplicate IRI, not saved.");
+		}		
+		
+	    Elements inputElements = doc.getElementsByTag("th");  
+	    for (Element inputElement : inputElements) {   
+	    	if(inputElement.text().equals("Hierarchy")) {	
+	    		if(inputElement.nextElementSibling().text().substring(0, 8).equals("Children")) {
+	    		// Cell begins with "Children": save all the href-targets as list of children
+	    			for (Element childLink : inputElement.nextElementSibling().getElementsByTag("a")) {
+	    				parentLinkList.putAll(processChildTerm(childLink.text(), parentLinkList, ontoClass));
+	    			}    	            
+	    		} else if(inputElement.nextElementSibling().text().substring(0, 6).equals("Parent")) {
+	    		  // There is always only 1 parent in Cellosaurus
+	    			Element parentLink = inputElement.nextElementSibling().getElementsByTag("a").get(0);
+	    			parentLinkList.put(iri, parentLink.text());	    				
+	    			int index = 0;	
+	    		    // After that there might be some children too:
+					for (Element childLink : inputElement.nextElementSibling().getElementsByTag("a")) {
+						// Omit the first element, since it must be a parent we just processed
+						if(index > 0) {
+							parentLinkList.putAll(processChildTerm(childLink.text(), parentLinkList, ontoClass));
+						}
+						index++;
+					}
+	    		}
+	    		
+	    	}
+	    } 
+			
+	    
+		return parentLinkList;
+	}
+
+	
+	private HashMap<String, String> processChildTerm(String childLinkText, HashMap<String, String> parentLinkList, String ontoClass) throws ExternalServiceConnectorException {
+
+		if(!visitedTerms.contains(childLinkText)) {
+			visitedTerms.add(childLinkText);
+			// go recursive
+
+			this.setIri(childLinkText);
+			
+			// add iri to the parent linking map
+			parentLinkList.putAll(this.queryAndStoreOLS(ontoClass));
+			
 		}
 		
 		return parentLinkList;
 	}
-
+	
 	@Override
 	public AbstractTerm retrieveAsJSON(String iri) {
 		// TODO Auto-generated method stub
@@ -94,8 +139,17 @@ public class CellosaurusConnector implements ExternalServiceConnector {
 	}
 
 	@Override
-	public void linkParents(String url, String childIri) throws ExternalServiceConnectorException {
+	public void linkParents(String parentIri, String childIri) throws ExternalServiceConnectorException {
 
+		List<AbstractTerm> parent = this.CellosaurusRepo.findByIri(parentIri);
+		if(!parent.isEmpty()) {
+			List<AbstractTerm> child = this.CellosaurusRepo.findByIri(childIri);
+			if(!child.isEmpty()) {
+				child.get(0).setParent(parent.get(0));
+				CellosaurusRepo.save(child.get(0));
+			}
+		}
+		
 		return;
 	}
 

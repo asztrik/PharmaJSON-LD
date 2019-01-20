@@ -113,7 +113,7 @@ public class OLSCallController {
 			baoConn = new BaoConnector();
 			cellosaurusConn = new CellosaurusConnector();
 			
-			/*// Fetch GO terms
+			// Fetch GO terms
 			logger.info("Fetching EBI OLS terms...");
 			updateParentPath(ebiOlsConn, prop.getProperty("ebiols1"), ebiOlsRepo, prop.getProperty("ebiols1").replaceAll(":", ""));
 			updateParentPath(ebiOlsConn, prop.getProperty("ebiols2"), ebiOlsRepo, prop.getProperty("ebiols2").replaceAll(":", ""));
@@ -163,7 +163,7 @@ public class OLSCallController {
 				logger.info("bao"+String.valueOf(i));
 				updateParentPath(baoConn, prop.getProperty("bao"+String.valueOf(i)), baoRepo, prop.getProperty("bao"+String.valueOf(i)));
 			}	
-			*/
+			
 			// Fetch CellosaurusTerms
 			logger.info("Fetching Cellosaurus terms...");
 			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus1"), cellosaurusRepo, "CELLOSAURUS");
