@@ -3,7 +3,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.3.RELEASE")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.5.RELEASE")
     }
 }
 
@@ -30,22 +30,12 @@ targetCompatibility = 1.8
 
 
 dependencies {
-
-} 
-repositories {
-
-}
-
-dependencies {
-    compile("org.springframework.boot:spring-boot-starter-web")
+	compile("org.springframework.boot:spring-boot-starter-data-neo4j")
+	compile("org.springframework.boot:spring-boot-starter-data-rest")
     compile group: 'org.json', name: 'json', version: '20180130'
-    compile 'org.springframework.boot:spring-boot-starter-data-jpa'
-    compile("com.h2database:h2")
-    compile 'mysql:mysql-connector-java'
     compile 'ch.qos.logback:logback-classic:1.2.3'
     compile 'ch.qos.logback:logback-core:1.2.3'
     compile 'org.slf4j:slf4j-api:1.7.25'
-    compile("org.springframework.data:spring-data-neo4j")
     compile 'org.neo4j:neo4j-ogm-http-driver:3.1.5'    
     compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.0'
     compile group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0'

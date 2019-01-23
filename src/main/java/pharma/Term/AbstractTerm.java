@@ -1,44 +1,37 @@
 package pharma.Term;
 
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 
+
+import java.util.List;
 
 import org.json.JSONObject;
 
 //@MappedSuperclass
-@Entity
-@Inheritance(strategy=InheritanceType.SINGLE_TABLE)
+@NodeEntity
 public abstract class AbstractTerm {
 	
 	// An Id is needed for the Persistence API
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	protected Integer id;
+	@Id @GeneratedValue private Long id;
 
 	// Here are the fields that all the Terms have
 	protected String iri;
 	
 	protected String label;
 
-	@Column(columnDefinition="TEXT")
 	protected String synonym;
 	
 	protected String ontoclass;
 	
 	/*** THIS SHOULD BE MANY-TO-MANY... ***/
 	
-    @ManyToOne(targetEntity = AbstractTerm.class, optional=true)
-    @JoinColumn(name="PARENT_ID", nullable=true)
-    protected AbstractTerm parent;
+	@Relationship(type = "CHILD_OF", direction = Relationship.UNDIRECTED)
+	protected List<Parent> hierarchy;
+
 	
 	// All the Terms need a method that converts them to a JSON
 	// But the exact format / content depends on the FE fields...
@@ -72,11 +65,11 @@ public abstract class AbstractTerm {
 	
 	// getters and setters...
 	
-	public Integer getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
@@ -104,8 +97,8 @@ public abstract class AbstractTerm {
 		this.synonym = synonym;
 	}
 
-	public void setParent(AbstractTerm parentlist) {
-		this.parent = parentlist;
+	public void setParent(List<Parent> parentlist) {
+		this.hierarchy = parentlist;
 	}
 
 	
@@ -118,5 +111,6 @@ public abstract class AbstractTerm {
 	}
 	
 	
-	
 }
+
+

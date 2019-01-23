@@ -1,8 +1,9 @@
 package pharma.Term;
 
-import javax.persistence.Entity;
 
-@Entity
+import org.neo4j.ogm.annotation.NodeEntity;
+
+@NodeEntity
 public class ChebiTerm extends AbstractTerm {
 
 
