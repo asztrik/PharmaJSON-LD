@@ -12,14 +12,6 @@ import pharma.Term.AbstractTerm;
 // This will be AUTO IMPLEMENTED by Spring into a Bean called userRepository
 // CRUD refers Create, Read, Update, Delete
 
-public interface NcbiTaxonRepository extends CrudRepository<AbstractTerm, Long> {
-
-	@Query("SELECT p FROM AbstractTerm p WHERE p.iri LIKE LOWER(CONCAT('%',:iri, '%')) AND dtype LIKE 'NcbiTaxonTerm'")
-	List<AbstractTerm> findByIri(String iri);
+public interface NcbiTaxonRepository extends AbstractRepository {
 	
-	@Query("SELECT p FROM AbstractTerm p WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%')) AND dtype LIKE 'NcbiTaxonTerm'")
-	List<AbstractTerm> findBySynonym(String synonym);
-	
-	@Query(value = "SELECT p FROM AbstractTerm p WHERE p.parent = :parentId AND dtype LIKE 'NcbiTaxonTerm'")
-	List<AbstractTerm> findByParent(@Param("parentId") AbstractTerm parent);	
 }

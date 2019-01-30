@@ -29,7 +29,7 @@ public abstract class AbstractTerm {
 	
 	/*** THIS SHOULD BE MANY-TO-MANY... ***/
 	
-	@Relationship(type = "CHILD_OF", direction = Relationship.UNDIRECTED)
+	@Relationship(type = "CHILD_OF", direction = Relationship.OUTGOING)
 	protected List<Parent> hierarchy;
 
 	
