@@ -16,8 +16,9 @@ public interface CellosaurusRepository extends CrudRepository<AbstractTerm, Long
 	List<AbstractTerm> findByIri(String iri);
 	
 	@Query("SELECT p FROM AbstractTerm p "
-			+ "WHERE p.synonym LIKE LOWER(CONCAT('%',:synonym, '%')) "
-			+ "AND dtype LIKE 'CellosaurusTerm'")
+			+ "WHERE p.label LIKE LOWER(CONCAT('%',:synonym, '%')) "
+			+ "AND dtype LIKE 'CellosaurusTerm'"
+			+ "AND ontoclass = 'CELLOSAURUS'")
 	List<AbstractTerm> findBySynonym(String synonym);
 		
 	@Query(value = "SELECT p FROM AbstractTerm p "

@@ -401,7 +401,7 @@ public class OLSCallController {
     		break;
     	case "cellosaurus":
     		List<AbstractTerm> labelsCellosaurus = null;
-    		labelsBao = cellosaurusRepo.findBySynonym(label);
+    		labelsCellosaurus = cellosaurusRepo.findBySynonym(label);
     		terms = collectTerms(labelsCellosaurus);     		
     		break;      		
     	default:
