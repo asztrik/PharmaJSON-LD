@@ -23,6 +23,7 @@ import pharma.Connector.NcbiTaxonConnector;
 import pharma.Connector.OboNcitConnector;
 import pharma.Connector.UniprotConnector;
 import pharma.Exception.ExternalServiceConnectorException;
+import pharma.Repository.AbstractRepository;
 import pharma.Repository.ChebiRepository;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Repository.MondoRepository;
@@ -31,6 +32,8 @@ import pharma.Repository.OboNcitRepository;
 import pharma.Repository.UniprotRepository;
 import pharma.Term.AbstractTerm;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 //Import log4j classes.
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -219,65 +222,47 @@ public class OLSCallController {
     		@RequestParam(value="ontology", defaultValue="ncit") String ontology,
     		@RequestParam(value="class", defaultValue="") String ontoClass) {
     	
-    	// create a Set to uniquely store the found parents
-    	Set<AbstractTerm> parents = new HashSet<AbstractTerm>();
-    	List<AbstractTerm> parent_ids = new ArrayList<AbstractTerm>();
+    	JSONObject returnObject = new JSONObject();
+    	JSONArray childrenArray = new JSONArray();    	
     	
-    	// String for the response JSON
-    	String returnString = "{ \"getChildrenResult\": [ "; 
+    	AbstractRepository repo;
     	
     	switch(ontology) {
     	case "go":
-    		parents.addAll(ebiOlsRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = ebiOlsRepo.findByParent(t, ontoClass);
-    		}
+    		repo = ebiOlsRepo;
     		break;
     	case "ncit":
-    		parents.addAll(oboNcitRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = oboNcitRepo.findByParent(t, ontoClass);
-    		}
+    		repo = oboNcitRepo;
     		break;
     	case "ncbitaxon":
-    		parents.addAll(ncbiTaxonRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = ncbiTaxonRepo.findByParent(t);
-    		}
+    		repo = ncbiTaxonRepo;
     		break;
     	case "mondo":
-    		parents.addAll(mondoRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = mondoRepo.findByParent(t);
-    		}
+    		repo = mondoRepo; 
     		break;
     	case "chebi":
-    		parents.addAll(chebiRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = chebiRepo.findByParent(t);
-    		}
+    		repo = chebiRepo;
     		break;
     	default: 
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
     	}
     	
-		int elemCount = 1;
-		for(AbstractTerm t : parent_ids) {
-			returnString = returnString + t.toJSON().toString();
-			elemCount++;
-			if(elemCount <= parent_ids.size())
-				returnString = returnString + ", ";
+		List<AbstractTerm> children = new ArrayList<AbstractTerm>();
+		
+		if(ontoClass.isEmpty()) {
+			children = repo.findByParent(parent);
+		} else {
+			children = repo.findByParent(parent, ontoClass);
 		}
+
+		for(AbstractTerm t : children) {
+			childrenArray.put(t.toJSON());
+		}   	
     	
-    	returnString = returnString + "] }";
-    	logger.info("Returned : "+elemCount+ " terms.");
-    	return returnString;
+    	returnObject.append("getChildrenResult", childrenArray);
+    	
+    	return returnObject.toString();
     	
     }
 	
@@ -296,85 +281,53 @@ public class OLSCallController {
     		@RequestParam(value="ontology", defaultValue="go") String ontology,
     		@RequestParam(value="class", defaultValue="") String ontClass) {      
 		
-    	String returnstring = "{\"@context\": \""+ontology+((ontClass.isEmpty() || ontClass == null)?"":":")+ontClass+"\"," + 
-    			"\""+label+"\": [ ";
-	
-    	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
+    	JSONObject returnObject = new JSONObject();
+    	JSONArray suggestArray = new JSONArray();
+		
+    	AbstractRepository repo;
     	
     	switch(ontology) {
     	case "go":
-    		List<AbstractTerm> labelsGo;
-    		labelsGo = ebiOlsRepo.findBySynonym(label, ontClass);
-    		for (Iterator<AbstractTerm> i = labelsGo.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}     		
+    		repo = ebiOlsRepo;
     		break;
-    	case "ncit": 
-    		List<AbstractTerm> labelsNcit;
-    		labelsNcit = oboNcitRepo.findBySynonym(label, ontClass);
-    		for (Iterator<AbstractTerm> i = labelsNcit.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}     		
-    		break;
-    	case "mondo":
-    		List<AbstractTerm> labelsMondo;
-    		labelsMondo = mondoRepo.findBySynonym(label);
-    		for (Iterator<AbstractTerm> i = labelsMondo.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}       		
+    	case "ncit":
+    		repo = oboNcitRepo;
     		break;
     	case "ncbitaxon":
-    		List<AbstractTerm> labelsNcbiTaxon;
-    		labelsNcbiTaxon = ncbiTaxonRepo.findBySynonym(label);
-    		for (Iterator<AbstractTerm> i = labelsNcbiTaxon.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}       		
+    		repo = ncbiTaxonRepo;
+    		break;
+    	case "mondo":
+    		repo = mondoRepo;
     		break;
     	case "chebi":
-    		List<AbstractTerm> labelsChebi;
-    		labelsChebi = chebiRepo.findBySynonym(label);
-    		for (Iterator<AbstractTerm> i = labelsChebi.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}       		
+    		repo = chebiRepo;
     		break;
-    	case "uniprot":
-    		List<AbstractTerm> labelsUniprot;
-    		labelsUniprot = uniprotRepo.findBySynonym(label);
-    		for (Iterator<AbstractTerm> i = labelsUniprot.iterator(); i.hasNext();) {
-    			AbstractTerm item = i.next();
-    			returnstring = returnstring + System.lineSeparator() + item.toJSON().toString();
-    			returnstring = returnstring + ",";
-    			logger.info("Suggest hit: " + item.getIri());
-    		}       		
-    		break;
-    	default:
+    	default: 
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
-    	}
+    	}		
 		
+    	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
     	
-		// remove last comma
-		returnstring = returnstring.substring(0, returnstring.length()-1);
-		
-    	//Add end of JSON wrapper
-		returnstring = returnstring + " ] }";
-		
-    	return returnstring;
+    	returnObject.append("@context", ontology);
+    	if(!ontClass.isEmpty())
+			returnObject.append("class", ontClass);
+    	
+    	List<AbstractTerm> hits = new ArrayList<AbstractTerm>();
+    	
+    	if(!ontClass.isEmpty())
+    		hits = repo.findBySynonym(label, ontClass);
+    	else
+    		hits = repo.findBySynonym(label);
+    	
+		for(AbstractTerm t : hits) {
+			suggestArray.put(t.toJSON());
+			logger.info("Suggest hit: " + t.getIri());
+		}    	
+    	
+    	returnObject.append(label, suggestArray);
+    	
+    	return returnObject.toString();
     	
     }
 

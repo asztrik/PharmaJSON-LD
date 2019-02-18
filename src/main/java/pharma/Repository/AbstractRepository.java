@@ -22,7 +22,7 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 * @param iri
 	 * @return
 	 */
-	@Query("MATCH (t:AbstractTerm {iri: {iri}}) RETURN t")
+	@Query("MATCH (t:AbstractTerm) WHERE t.iri CONTAINS {iri} RETURN t")
 	List<AbstractTerm> findByIri(@Param("iri") String iri);
 	
 	/**
@@ -47,8 +47,8 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 * @param parent
 	 * @return
 	 */
-	@Query("MATCH (p:AbstractTerm {id: {parentId}})<-[r:CHILD_OF]-(c:AbstractTerm) RETURN c")
-	List<AbstractTerm> findByParent(@Param("parentId") AbstractTerm parent);
+	@Query("MATCH (a:AbstractTerm)-[:CHILD_OF]->(b:AbstractTerm) WHERE b.iri CONTAINS {parentIri} RETURN a")
+	List<AbstractTerm> findByParent(@Param("parentIri") String parentIri);
 	
 	/**
 	 * Retrieves a set of terms by one common parent with filtering for ontology class
@@ -56,6 +56,6 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 * @param className
 	 * @return
 	 */
-	@Query("MATCH (p:AbstractTerm {id: {parentId}})<-[r:CHILD_OF]-(c:AbstractTerm) WHERE c.ontoclass =~ '.*{className}.*' RETURN c")
-	List<AbstractTerm> findByParent(@Param("parentId") AbstractTerm parent, @Param("className") String className);	
+	@Query("MATCH (a:AbstractTerm)-[:CHILD_OF]->(b:AbstractTerm) WHERE b.iri CONTAINS {parentIri} AND b.ontoclass CONTAINS {className} RETURN a")
+	List<AbstractTerm> findByParent(@Param("parentIri") String parentIri, @Param("className") String className);	
 }

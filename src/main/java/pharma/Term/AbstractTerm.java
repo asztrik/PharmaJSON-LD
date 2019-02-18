@@ -3,6 +3,7 @@ package pharma.Term;
 
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.Index;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -19,6 +20,7 @@ public abstract class AbstractTerm {
 	@Id @GeneratedValue private Long id;
 
 	// Here are the fields that all the Terms have
+	@Index(unique=true) 
 	protected String iri;
 	
 	protected String label;
@@ -30,7 +32,7 @@ public abstract class AbstractTerm {
 	/*** THIS SHOULD BE MANY-TO-MANY... ***/
 	
 	@Relationship(type = "CHILD_OF", direction = Relationship.OUTGOING)
-	protected List<Parent> hierarchy;
+	protected List<AbstractTerm> hierarchy;
 
 	
 	// All the Terms need a method that converts them to a JSON
@@ -97,7 +99,7 @@ public abstract class AbstractTerm {
 		this.synonym = synonym;
 	}
 
-	public void setParent(List<Parent> parentlist) {
+	public void setParent(List<AbstractTerm> parentlist) {
 		this.hierarchy = parentlist;
 	}
 
