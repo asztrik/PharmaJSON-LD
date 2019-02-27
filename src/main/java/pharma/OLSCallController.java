@@ -25,8 +25,7 @@ import pharma.Connector.NcbiTaxonConnector;
 import pharma.Connector.OboNcitConnector;
 import pharma.Connector.UniprotConnector;
 import pharma.Exception.ExternalServiceConnectorException;
-import pharma.Repository.BaoRepository;
-import pharma.Repository.CellosaurusRepository;
+import pharma.Repository.AbstractRepository;
 import pharma.Repository.ChebiRepository;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Repository.MondoRepository;
@@ -234,48 +233,26 @@ public class OLSCallController {
     		@RequestParam(value="ontology", defaultValue="ncit") String ontology,
     		@RequestParam(value="class", defaultValue="") String ontoClass) {
     	
-    	// create a Set to uniquely store the found parents
-    	Set<AbstractTerm> parents = new HashSet<AbstractTerm>();
-    	List<AbstractTerm> parent_ids = new ArrayList<AbstractTerm>();
+    	JSONObject returnObject = new JSONObject();
+    	JSONArray childrenArray = new JSONArray();    	
     	
-    	// String for the response JSON
-    	String returnString = "{ \"getChildrenResult\": [ "; 
+    	AbstractRepository repo;
     	
     	switch(ontology) {
     	case "go":
-    		parents.addAll(ebiOlsRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = ebiOlsRepo.findByParent(t, ontoClass);
-    		}
+    		repo = ebiOlsRepo;
     		break;
     	case "ncit":
-    		parents.addAll(oboNcitRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = oboNcitRepo.findByParent(t, ontoClass);
-    		}
+    		repo = oboNcitRepo;
     		break;
     	case "ncbitaxon":
-    		parents.addAll(ncbiTaxonRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = ncbiTaxonRepo.findByParent(t);
-    		}
+    		repo = ncbiTaxonRepo;
     		break;
     	case "mondo":
-    		parents.addAll(mondoRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = mondoRepo.findByParent(t);
-    		}
+    		repo = mondoRepo; 
     		break;
     	case "chebi":
-    		parents.addAll(chebiRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = chebiRepo.findByParent(t);
-    		}
+    		repo = chebiRepo;
     		break;
     	case "bao":
     		parents.addAll(baoRepo.findByIri(parent));
@@ -296,17 +273,21 @@ public class OLSCallController {
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
     	}
     	
-		int elemCount = 1;
-		for(AbstractTerm t : parent_ids) {
-			returnString = returnString + t.toJSON().toString();
-			elemCount++;
-			if(elemCount <= parent_ids.size())
-				returnString = returnString + ", ";
+		List<AbstractTerm> children = new ArrayList<AbstractTerm>();
+		
+		if(ontoClass.isEmpty()) {
+			children = repo.findByParent(parent);
+		} else {
+			children = repo.findByParent(parent, ontoClass);
 		}
+
+		for(AbstractTerm t : children) {
+			childrenArray.put(t.toJSON());
+		}   	
     	
-    	returnString = returnString + "] }";
-    	logger.info("Returned : "+elemCount+ " terms.");
-    	return returnString;
+    	returnObject.append("getChildrenResult", childrenArray);
+    	
+    	return returnObject.toString();
     	
     }
 	
@@ -357,72 +338,62 @@ public class OLSCallController {
 		
 		JSONObject response = new JSONObject();
 		
-		response.append("@context", ontology+((ontClass.isEmpty() || ontClass == null)?"":":")+ontClass);
-		   	
-    	JSONArray terms = new JSONArray();
-	
-    	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
+    	JSONObject returnObject = new JSONObject();
+    	JSONArray suggestArray = new JSONArray();
+		
+    	AbstractRepository repo;
     	
     	switch(ontology) {
     	case "go":
-    		List<AbstractTerm> labelsGo = null;
-    		labelsGo = ebiOlsRepo.findBySynonym(label, ontClass);
-    		terms = collectTerms(labelsGo);		
+    		repo = ebiOlsRepo;
     		break;
-    	case "ncit": 
-    		List<AbstractTerm> labelsNcit = null;
-    		labelsNcit = oboNcitRepo.findBySynonym(label, ontClass);
-    		terms = collectTerms(labelsNcit);  		
-    		break;
-    	case "mondo":
-    		List<AbstractTerm> labelsMondo = null;
-    		labelsMondo = mondoRepo.findBySynonym(label);
-    		terms = collectTerms(labelsMondo);     		
+    	case "ncit":
+    		repo = oboNcitRepo;
     		break;
     	case "ncbitaxon":
-    		List<AbstractTerm> labelsNcbiTaxon = null;
-    		labelsNcbiTaxon = ncbiTaxonRepo.findBySynonym(label);
-    		terms = collectTerms(labelsNcbiTaxon);        		
+    		repo = ncbiTaxonRepo;
+    		break;
+    	case "mondo":
+    		repo = mondoRepo;
     		break;
     	case "chebi":
-    		List<AbstractTerm> labelsChebi = null;
-    		labelsChebi = chebiRepo.findBySynonym(label);
-    		terms = collectTerms(labelsChebi);        		
+    		repo = chebiRepo;
     		break;
     	case "uniprot":
-    		List<AbstractTerm> labelsUniprot = null;
-    		labelsUniprot = uniprotRepo.findBySynonym(label);
-    		terms = collectTerms(labelsUniprot);     		
+    		repo = uniprotRepo;
     		break;
     	case "bao":
-    		List<AbstractTerm> labelsBao = null;
-    		labelsBao = baoRepo.findBySynonym(label, ontClass);
-    		terms = collectTerms(labelsBao);     		
+    		repo = baoRepo;
     		break;
     	case "cellosaurus":
-    		List<AbstractTerm> labelsCellosaurus = null;
-    		labelsCellosaurus = cellosaurusRepo.findBySynonym(label);
-    		terms = collectTerms(labelsCellosaurus);     		
-    		break;      		
-    	default:
+    		repo = cellosaurusRepo;
+    		break;          
+    	default: 
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
-    	}
+    	}		
 		
-    	/** 
-    	 * Limit - handling, experimental feature!
-    	 */
-    	if(limit.isEmpty()) {
-    		response.append(label, terms);
-    	} else {
-    	JSONArray limitedTerms = new JSONArray();
-	    	for(int i = 0; i < Integer.parseInt(limit); i++) {
-	    		limitedTerms.put(terms.get(i));
-	    	}
-	    	response.append(label, limitedTerms);
-    	}
+    	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
     	
-    	return response.toString();
+    	returnObject.append("@context", ontology);
+    	if(!ontClass.isEmpty())
+			returnObject.append("class", ontClass);
+    	
+    	List<AbstractTerm> hits = new ArrayList<AbstractTerm>();
+    	
+    	if(!ontClass.isEmpty())
+    		hits = repo.findBySynonym(label, ontClass);
+    	else
+    		hits = repo.findBySynonym(label);
+    	
+		for(AbstractTerm t : hits) {
+			suggestArray.put(t.toJSON());
+			logger.info("Suggest hit: " + t.getIri());
+		}    	
+    	
+    	returnObject.append(label, suggestArray);
+    	
+    	return returnObject.toString();
     	
     }
 

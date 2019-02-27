@@ -86,7 +86,8 @@ public class EbiOlsConnector extends AbstractOlsConnector {
     		if(!child.isEmpty()) {
     			List<AbstractTerm> parent = this.ebiOlsRepo.findByIri(term.getString("iri"));
     			if(!parent.isEmpty()) {
-    				child.get(0).setParent(parent.get(0));
+    				// TODO change! 
+    				child.get(0).setParent(parent);
     				ebiOlsRepo.save(child.get(0));
     			}
     		}
