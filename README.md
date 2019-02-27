@@ -27,17 +27,17 @@ The service logs its actions and errors, the logifle is called: pharma.log and i
 
 # Supported methods
 
-##UPDATE 
+## UPDATE 
 **update()**
 
 Goes through the specified IRI-s from the application.properties file and saves recursively all their children into the database under the given ontology and class.
 
-##SUGGEST 
+## SUGGEST 
 **suggest(label (string), ontology ({GO, NCIT, CHEBI, NCBITAXON, MONDO}), ontology class (string))**
 
 returns all the terms from a given ontology's given class that contain the label parameter a a substring.
 
-##GETCHILDREN 
+## GETCHILDREN 
 **getChildren(parent (IRI), ontology ({GO, NCIT, CHEBI, NCBITAXON, MONDO}), ontology class (string))**
 
 returns all the children of a given parent IRI from an ontology  (or its class)
