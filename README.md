@@ -9,10 +9,12 @@ It is only the core functionality, the fetched data and its fields are not final
 
 ## How does it work
 
-Preparations:
+**Preparations:**
 1. Download Neo4J: https://neo4j.com/download/
 2. Start the database engine by running ./neo4j console from the downloaded program's /bin folder
 3. Make sure that a database connections is available as described in the **application.properties** file 
+
+**Running the service**
 
 1. Download or clone the repo
 2. cd into "PharmaJSON-LD"
