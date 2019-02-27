@@ -23,6 +23,7 @@ repositories {
     mavenCentral()
     maven { url "https://repository.jboss.org/nexus/content/repositories/releases" }
     maven { url 'http://repo.spring.io/libs-snapshot-continuous-local'  }
+
 }
 
 sourceCompatibility = 1.8

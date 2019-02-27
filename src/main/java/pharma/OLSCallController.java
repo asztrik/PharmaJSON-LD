@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import pharma.Connector.BaoConnector;
+import pharma.Connector.CellosaurusConnector;
 import pharma.Connector.ChebiConnector;
 import pharma.Connector.EbiOlsConnector;
 import pharma.Connector.ExternalServiceConnector;
@@ -60,6 +62,12 @@ public class OLSCallController {
 
 	@Autowired
 	private UniprotRepository uniprotRepo;
+
+	@Autowired
+	private BaoRepository baoRepo;
+
+	@Autowired
+	private CellosaurusRepository cellosaurusRepo;
 	
 	private EbiOlsConnector ebiOlsConn;
 	private OboNcitConnector oboNcitConn;
@@ -67,29 +75,14 @@ public class OLSCallController {
 	private MondoConnector mondoConn;
 	private NcbiTaxonConnector ncbiTaxonConn;
 	private UniprotConnector uniprotConn;
+	private BaoConnector baoConn;
+	private CellosaurusConnector cellosaurusConn;
 	
 	
     private static final Logger logger = LoggerFactory.getLogger(OLSCallController.class);
 	
 	/**
-	 * TEMPORARY TASK FOR THIS METHOD
-	 * - nothing
-	 * 
-	 * WHAT IT SHOULD DO
-	 * - go IRI to IRI in the DB and check them against the OLS
-	 * - should have an optional IRI parameter
-	 * - consider renaming! (update(IRI) and regularUpdate()...)
-	 * 
-	 * update(IRI):
-     * create_new_if_not_exists(IRI)
-     * save_labels(IRI)
-     * update_parent_path(IRI)
-     * children = get_children(IRI)
-     * foreach child_IRI in children {
-     *   set_child(IRI, child_IRI)
-     *   update(child_IRI)
-     * }
-	 * 
+     * Updates terms based on the list in application.properties
 	 * 
 	 **/
 	@RequestMapping("/update")
@@ -116,6 +109,8 @@ public class OLSCallController {
 			ncbiTaxonConn = new NcbiTaxonConnector();
 			chebiConn = new ChebiConnector();
 			uniprotConn = new UniprotConnector();
+			baoConn = new BaoConnector();
+			cellosaurusConn = new CellosaurusConnector();
 			
 			// Fetch GO terms
 			logger.info("Fetching EBI OLS terms...");
@@ -160,7 +155,23 @@ public class OLSCallController {
 			// Fetch Uniprot terms
 			logger.info("Fetching UniProt terms...");
 			updateParentPath(uniprotConn, prop.getProperty("uniprot"), uniprotRepo, "UNIPROT");
-		
+			
+			// Fetch BAOTerms
+			logger.info("Fetching BAO terms...");
+			for(int i = 1; i < 18; i++) {
+				logger.info("bao"+String.valueOf(i));
+				updateParentPath(baoConn, prop.getProperty("bao"+String.valueOf(i)), baoRepo, prop.getProperty("bao"+String.valueOf(i)));
+			}	
+			
+			// Fetch CellosaurusTerms
+			logger.info("Fetching Cellosaurus terms...");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus1"), cellosaurusRepo, "CELLOSAURUS");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus2"), cellosaurusRepo, "CELLOSAURUS");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus3"), cellosaurusRepo, "CELLOSAURUS");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus4"), cellosaurusRepo, "CELLOSAURUS");
+			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus5"), cellosaurusRepo, "CELLOSAURUS");
+			
+			
 		} catch (Exception e) {
 
 			e.printStackTrace();
@@ -208,10 +219,10 @@ public class OLSCallController {
     }		
 	
 	/**
+	 * WARNING!
 	 * 
-	 * WHAT IT SHOULD DO
-	 * - query persisted
-	 * - return subtree of the found IRI
+	 * METHOD NOT COMPLETED, FUNCTIONALITY STILL UNDER DISCUSSION
+	 * the current state represents a temporary, experimental method
 	 * 
 	 * @param iri
 	 * @return
@@ -243,6 +254,20 @@ public class OLSCallController {
     	case "chebi":
     		repo = chebiRepo;
     		break;
+    	case "bao":
+    		parents.addAll(baoRepo.findByIri(parent));
+    		logger.info("GetChildren Parent IRI: "+parent);
+    		for(AbstractTerm t : parents) {
+    			parent_ids = baoRepo.findByParent(t, ontoClass);
+    		}
+    		break;    		
+    	case "cellosaurus":
+    		parents.addAll(cellosaurusRepo.findByIri(parent));
+    		logger.info("GetChildren Parent IRI: "+parent);
+    		for(AbstractTerm t : parents) {
+    			parent_ids = cellosaurusRepo.findByParent(t);
+    		}
+    		break;    		
     	default: 
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
@@ -267,6 +292,35 @@ public class OLSCallController {
     }
 	
     /**
+     * Helper function to build the resulting JSON resonse for SUGGEST
+     * @param labels
+     * @return
+     */
+    public JSONArray collectTerms(List<AbstractTerm> labels) {
+    	
+    	JSONArray output = new JSONArray();
+
+    	if(labels == null)
+    		return output; // empty list: give empty JSON back.
+
+
+    	
+		for (Iterator<AbstractTerm> i = labels.iterator(); i.hasNext();) {
+			AbstractTerm item = i.next();
+			
+			output.put(item.toJSON());
+			
+			logger.info("Suggest hit: " + item.getIri());
+		}
+		
+		return output;
+    }
+    
+    
+    
+    
+    
+    /**
      * 
      * WHAT IT DOES:
      * - query persisted data
@@ -279,7 +333,10 @@ public class OLSCallController {
     public String suggest(
     		@RequestParam(value="label", defaultValue="extra") String label,
     		@RequestParam(value="ontology", defaultValue="go") String ontology,
-    		@RequestParam(value="class", defaultValue="") String ontClass) {      
+    		@RequestParam(value="class", defaultValue="") String ontClass,
+			@RequestParam(value="limit", defaultValue="") String limit) {      
+		
+		JSONObject response = new JSONObject();
 		
     	JSONObject returnObject = new JSONObject();
     	JSONArray suggestArray = new JSONArray();
@@ -302,6 +359,15 @@ public class OLSCallController {
     	case "chebi":
     		repo = chebiRepo;
     		break;
+    	case "uniprot":
+    		repo = uniprotRepo;
+    		break;
+    	case "bao":
+    		repo = baoRepo;
+    		break;
+    	case "cellosaurus":
+    		repo = cellosaurusRepo;
+    		break;          
     	default: 
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
