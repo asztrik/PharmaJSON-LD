@@ -14,6 +14,7 @@ import java.util.Iterator;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 
 import pharma.Connector.BaoConnector;
 import pharma.Connector.CellosaurusConnector;
@@ -26,6 +27,8 @@ import pharma.Connector.OboNcitConnector;
 import pharma.Connector.UniprotConnector;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.AbstractRepository;
+import pharma.Repository.BaoRepository;
+import pharma.Repository.CellosaurusRepository;
 import pharma.Repository.ChebiRepository;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Repository.MondoRepository;
@@ -81,6 +84,27 @@ public class OLSCallController {
 	
     private static final Logger logger = LoggerFactory.getLogger(OLSCallController.class);
 	
+    
+
+	@RequestMapping("/")
+    public String home() {
+		return 
+			"<html>\n" + 
+			"<body>\n" + 
+			"<h1>Ontology Lookup Service </h1>\n" + 
+			"<h2>Fairness for Pharma Data </h2>\n" + 
+			"The service currently offers the following methods\n" + 
+			"<ul>\n" + 
+			"	<li>suggest</li>\n" + 
+			"	<li>getChildren</li>\n" + 
+			"	<li>update</li>\n" + 
+			"</ul>\n" + 
+			"For more info please visit the <a href=\"https://github.com/asztrik/PharmaJSON-LD\">github page</a>.\n" + 
+			"</body>\n" + 
+			"</html>";
+	}
+    
+    
 	/**
      * Updates terms based on the list in application.properties
 	 * 
@@ -114,43 +138,38 @@ public class OLSCallController {
 			
 			// Fetch GO terms
 			logger.info("Fetching EBI OLS terms...");
-			updateParentPath(ebiOlsConn, prop.getProperty("ebiols1"), ebiOlsRepo, prop.getProperty("ebiols1").replaceAll(":", ""));
-			updateParentPath(ebiOlsConn, prop.getProperty("ebiols2"), ebiOlsRepo, prop.getProperty("ebiols2").replaceAll(":", ""));
-			updateParentPath(ebiOlsConn, prop.getProperty("ebiols3"), ebiOlsRepo, prop.getProperty("ebiols3").replaceAll(":", ""));
-			updateParentPath(ebiOlsConn, prop.getProperty("ebiols4"), ebiOlsRepo, prop.getProperty("ebiols4").replaceAll(":", ""));
-			updateParentPath(ebiOlsConn, prop.getProperty("ebiols5"), ebiOlsRepo, prop.getProperty("ebiols5").replaceAll(":", ""));
+			for(int i = 1; i < 6; i++) {
+				logger.info("ebiols"+String.valueOf(i));
+				updateParentPath(ebiOlsConn, prop.getProperty("ebiols"+String.valueOf(i)), ebiOlsRepo, prop.getProperty("ebiols"+String.valueOf(i)).replaceAll(":", ""));
+			}			
 			
 			// Fetch NCIT terms
 			logger.info("Fetching OBO NCIT terms...");
-			updateParentPath(oboNcitConn, prop.getProperty("oboncit1"), oboNcitRepo, prop.getProperty("oboncit1").replaceAll(":", ""));
-			updateParentPath(oboNcitConn, prop.getProperty("oboncit2"), oboNcitRepo, prop.getProperty("oboncit2").replaceAll(":", ""));
-			updateParentPath(oboNcitConn, prop.getProperty("oboncit3"), oboNcitRepo, prop.getProperty("oboncit3").replaceAll(":", ""));
-			updateParentPath(oboNcitConn, prop.getProperty("oboncit4"), oboNcitRepo, prop.getProperty("oboncit4").replaceAll(":", ""));
-			updateParentPath(oboNcitConn, prop.getProperty("oboncit5"), oboNcitRepo, prop.getProperty("oboncit5").replaceAll(":", ""));
+			for(int i = 1; i < 6; i++) {
+				logger.info("oboncit"+String.valueOf(i));
+				updateParentPath(oboNcitConn, prop.getProperty("oboncit"+String.valueOf(i)), oboNcitRepo, prop.getProperty("oboncit"+String.valueOf(i)).replaceAll(":", ""));
+			}			
 			
 			// Fetch Mondo terms
 			logger.info("Fetching MONDO terms...");
-			updateParentPath(mondoConn, prop.getProperty("mondo1"), mondoRepo, "MONDO");
-			updateParentPath(mondoConn, prop.getProperty("mondo2"), mondoRepo, "MONDO");
-			updateParentPath(mondoConn, prop.getProperty("mondo3"), mondoRepo, "MONDO");
-			updateParentPath(mondoConn, prop.getProperty("mondo4"), mondoRepo, "MONDO");
-			updateParentPath(mondoConn, prop.getProperty("mondo5"), mondoRepo, "MONDO");
+			for(int i = 1; i < 6; i++) {
+				logger.info("mondo"+String.valueOf(i));
+				updateParentPath(mondoConn, prop.getProperty("mondo"+String.valueOf(i)), mondoRepo, "MONDO");
+			}			
 			
 			// Fetch NcbiTaxon terms
 			logger.info("Fetching NCBI TAXON terms...");
-			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon1"), ncbiTaxonRepo, "NCBITAXON");
-			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon2"), ncbiTaxonRepo, "NCBITAXON");
-			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon3"), ncbiTaxonRepo, "NCBITAXON");
-			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon4"), ncbiTaxonRepo, "NCBITAXON");
-			updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon5"), ncbiTaxonRepo, "NCBITAXON");
+			for(int i = 1; i < 6; i++) {
+				logger.info("ncbitaxon"+String.valueOf(i));
+				updateParentPath(ncbiTaxonConn, prop.getProperty("ncbitaxon"+String.valueOf(i)), ncbiTaxonRepo, "NCBITAXON");
+			}
 			
 			// Fetch ChebiTerms
 			logger.info("Fetching CHEBI terms...");
-			updateParentPath(chebiConn, prop.getProperty("chebi1"), chebiRepo, "CHEBI");
-			updateParentPath(chebiConn, prop.getProperty("chebi2"), chebiRepo, "CHEBI");
-			updateParentPath(chebiConn, prop.getProperty("chebi3"), chebiRepo, "CHEBI");
-			updateParentPath(chebiConn, prop.getProperty("chebi4"), chebiRepo, "CHEBI");
-			updateParentPath(chebiConn, prop.getProperty("chebi5"), chebiRepo, "CHEBI");
+			for(int i = 1; i < 6; i++) {
+				logger.info("chebi"+String.valueOf(i));
+				updateParentPath(chebiConn, prop.getProperty("chebi"+String.valueOf(i)), chebiRepo, "CHEBI");
+			}
 			
 			// Fetch Uniprot terms
 			logger.info("Fetching UniProt terms...");
@@ -165,11 +184,10 @@ public class OLSCallController {
 			
 			// Fetch CellosaurusTerms
 			logger.info("Fetching Cellosaurus terms...");
-			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus1"), cellosaurusRepo, "CELLOSAURUS");
-			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus2"), cellosaurusRepo, "CELLOSAURUS");
-			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus3"), cellosaurusRepo, "CELLOSAURUS");
-			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus4"), cellosaurusRepo, "CELLOSAURUS");
-			updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus5"), cellosaurusRepo, "CELLOSAURUS");
+			for(int i = 1; i < 6; i++) {
+				logger.info("cellosaurus"+String.valueOf(i));
+				updateParentPath(cellosaurusConn, prop.getProperty("cellosaurus"+String.valueOf(i)), cellosaurusRepo, "CELLOSAURUS");
+			}	
 			
 			
 		} catch (Exception e) {
@@ -219,10 +237,8 @@ public class OLSCallController {
     }		
 	
 	/**
-	 * WARNING!
-	 * 
-	 * METHOD NOT COMPLETED, FUNCTIONALITY STILL UNDER DISCUSSION
-	 * the current state represents a temporary, experimental method
+	 * Returns the terms that have the parent specified in the parameter
+	 * Uses the CHILD_OF relation
 	 * 
 	 * @param iri
 	 * @return
@@ -255,18 +271,10 @@ public class OLSCallController {
     		repo = chebiRepo;
     		break;
     	case "bao":
-    		parents.addAll(baoRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = baoRepo.findByParent(t, ontoClass);
-    		}
+    		repo = baoRepo;
     		break;    		
     	case "cellosaurus":
-    		parents.addAll(cellosaurusRepo.findByIri(parent));
-    		logger.info("GetChildren Parent IRI: "+parent);
-    		for(AbstractTerm t : parents) {
-    			parent_ids = cellosaurusRepo.findByParent(t);
-    		}
+    		repo = cellosaurusRepo;
     		break;    		
     	default: 
     		logger.warn("Ontology "+ontology+" not supported.");
@@ -291,34 +299,6 @@ public class OLSCallController {
     	
     }
 	
-    /**
-     * Helper function to build the resulting JSON resonse for SUGGEST
-     * @param labels
-     * @return
-     */
-    public JSONArray collectTerms(List<AbstractTerm> labels) {
-    	
-    	JSONArray output = new JSONArray();
-
-    	if(labels == null)
-    		return output; // empty list: give empty JSON back.
-
-
-    	
-		for (Iterator<AbstractTerm> i = labels.iterator(); i.hasNext();) {
-			AbstractTerm item = i.next();
-			
-			output.put(item.toJSON());
-			
-			logger.info("Suggest hit: " + item.getIri());
-		}
-		
-		return output;
-    }
-    
-    
-    
-    
     
     /**
      * 
@@ -335,8 +315,7 @@ public class OLSCallController {
     		@RequestParam(value="ontology", defaultValue="go") String ontology,
     		@RequestParam(value="class", defaultValue="") String ontClass,
 			@RequestParam(value="limit", defaultValue="") String limit) {      
-		
-		JSONObject response = new JSONObject();
+	
 		
     	JSONObject returnObject = new JSONObject();
     	JSONArray suggestArray = new JSONArray();
@@ -396,6 +375,6 @@ public class OLSCallController {
     	return returnObject.toString();
     	
     }
-
+	
 }
 

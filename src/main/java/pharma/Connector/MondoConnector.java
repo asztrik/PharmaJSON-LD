@@ -84,8 +84,7 @@ public class MondoConnector extends AbstractOlsConnector {
     		if(!child.isEmpty()) {
     			List<AbstractTerm> parent = this.MondoRepo.findByIri(term.getString("iri"));
     			if(!parent.isEmpty()) {
-    				// TODO change! 
-    				//child.get(0).setParent(parent.get(0));
+    				child.get(0).setParent(parent);
     				MondoRepo.save(child.get(0));
     			}
     		}

@@ -145,7 +145,7 @@ public class CellosaurusConnector implements ExternalServiceConnector {
 		if(!parent.isEmpty()) {
 			List<AbstractTerm> child = this.CellosaurusRepo.findByIri(childIri);
 			if(!child.isEmpty()) {
-				child.get(0).setParent(parent.get(0));
+				child.get(0).setParent(parent);
 				CellosaurusRepo.save(child.get(0));
 			}
 		}

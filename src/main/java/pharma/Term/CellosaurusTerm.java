@@ -1,8 +1,8 @@
 package pharma.Term;
 
-import javax.persistence.Entity;
+import org.neo4j.ogm.annotation.NodeEntity;
 
-@Entity
+@NodeEntity
 public class CellosaurusTerm extends AbstractTerm {
 
 }

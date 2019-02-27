@@ -136,7 +136,7 @@ public class BaoConnector  extends AbstractOlsConnector {
     		if(!child.isEmpty()) {
     			List<AbstractTerm> parent = this.baoRepo.findByIri(term.getString("iri"));
     			if(!parent.isEmpty()) {
-    				child.get(0).setParent(parent.get(0));
+    				child.get(0).setParent(parent);
     				baoRepo.save(child.get(0));
     			}
     		}
