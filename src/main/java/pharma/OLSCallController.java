@@ -98,7 +98,8 @@ public class OLSCallController {
 			"The service currently offers the following methods\n" + 
 			"<ul>\n" + 
 			"	<li>suggest</li>\n" + 
-			"	<li>getChildren</li>\n" + 
+			"	<li>getChildren</li>\n" +
+			"   <li>getTree</li>\n" + 
 			"	<li>update</li>\n" + 
 			"</ul>\n" + 
 			"For more info please visit the <a href=\"https://github.com/asztrik/PharmaJSON-LD\">github page</a>.\n" + 
