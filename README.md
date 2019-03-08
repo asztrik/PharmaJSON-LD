@@ -35,14 +35,20 @@ The service logs its actions and errors, the logifle is called: pharma.log and i
 Goes through the specified IRI-s from the application.properties file and saves recursively all their children into the database under the given ontology and class.
 
 ## SUGGEST 
-**suggest(label (string), ontology ({GO, NCIT, CHEBI, NCBITAXON, MONDO}), ontology class (string))**
+**suggest(label (string), ontology ({GO, NCIT, CHEBI, NCBITAXON, MONDO, UNIPROT, BAO, CELLOSAURUS}), ontology class (string))**
 
 returns all the terms from a given ontology's given class that contain the label parameter a a substring.
 
 ## GETCHILDREN 
-**getChildren(parent (IRI), ontology ({GO, NCIT, CHEBI, NCBITAXON, MONDO}), ontology class (string))**
+**getChildren(parent (IRI), ontology ({GO, NCIT, CHEBI, NCBITAXON, MONDO, UNIPROT, BAO, CELLOSAURUS}), ontology class (string))**
 
 returns all the children of a given parent IRI from an ontology  (or its class)
+
+## GETTREE 
+
+**getTree(parent (IRI), ontology ({GO, NCIT, CHEBI, NCBITAXON, MONDO, UNIPROT, BAO, CELLOSAURUS}), ontology class (string), filter (string))**
+
+returns all the descendants of a term containing the filter expression. If the filter is empty, returns all the children of children recursively
 
 # Request and Configuration Examples
 
@@ -114,6 +120,42 @@ GetChildren:
 	}]
 }
 ```
+
+GetTree:
+(Request: http://localhost:9999/gettree?parent=CVCL_0030&ontology=cellosaurus&filter=AR)
+
+```
+[
+	[{
+		"children": [
+			[
+				[{
+					"children": [
+						[
+							[{
+								"id": ["web.expasy.org/cellosaurus/CVCL_AR70"],
+								"text": ["cell line HeLa-Mitotrap-GGA2-FKBP (CVCL_AR70)"]
+							}, {
+								"id": ["web.expasy.org/cellosaurus/CVCL_AR69"],
+								"text": ["cell line HeLa-Mitotrap-Ap2a2-FKBP (CVCL_AR69)"]
+							}, {
+								"id": ["web.expasy.org/cellosaurus/CVCL_AR67"],
+								"text": ["cell line HeLa-Mitotrap-Ap1g1-FKBP (CVCL_AR67)"]
+							}]
+						]
+					],
+					"id": ["web.expasy.org/cellosaurus/CVCL_AR66"],
+					"text": ["cell line HeLa-Mitotrap (CVCL_AR66)"]
+				}]
+			]
+		]
+	}, {
+		"id": ["web.expasy.org/cellosaurus/CVCL_KT89"],
+		"text": ["cell line HeLa SilenciX PARP1 (CVCL_KT89)"]
+	}]
+]
+```
+
 
 
 Update:
