@@ -81,6 +81,8 @@ public class OLSCallController {
 	private BaoConnector baoConn;
 	private CellosaurusConnector cellosaurusConn;
 	
+	// class-global helper array to make sure that the getTree method doesn't loop 
+	private ArrayList<String> visitedTerms;
 	
     private static final Logger logger = LoggerFactory.getLogger(OLSCallController.class);
 	
@@ -107,6 +109,7 @@ public class OLSCallController {
     
 	/**
      * Updates terms based on the list in application.properties
+     * It should be redone...
 	 * 
 	 **/
 	@RequestMapping("/update")
@@ -235,12 +238,113 @@ public class OLSCallController {
 		return;
     	
     }		
+    
+
+    /**
+     * Helper to get the correct repo implementation
+     * Is a survivor from a previous concept where the ontologies 
+     * has severe differences and such distinction seemed logical
+     * @param ontology
+     * @return
+     */
+    private AbstractRepository getRepoImpl(String ontology) {
+    	switch(ontology) {
+    	case "go":
+    		return ebiOlsRepo;
+    	case "ncit":
+    		return oboNcitRepo;
+    	case "ncbitaxon":
+    		return ncbiTaxonRepo;
+    	case "mondo":
+    		return mondoRepo; 
+    	case "chebi":
+    		return chebiRepo;
+    	case "uniprot":
+    		return uniprotRepo;
+    	case "bao":
+    		return baoRepo;   		
+    	case "cellosaurus":
+    		return cellosaurusRepo;    		
+    	default: 
+    		return null;
+    	}   	
+    }
+    
+    /**
+     * gets all the children down the
+     * tree in a nested form
+     * @param parent
+     * @param ontology
+     * @param ontoClass
+     * @return
+     */
+    @RequestMapping("/gettree")
+    public String getTree(
+    		@RequestParam(value="parent", defaultValue="C60743") String parent,
+    		@RequestParam(value="ontology", defaultValue="ncit") String ontology,
+    		@RequestParam(value="class", defaultValue="") String ontoClass,
+    		@RequestParam(value="filter", defaultValue="") String filter){
+    
+    	JSONArray returnObject = new JSONArray();
+    	JSONArray childrenArray = new JSONArray();
+    	JSONObject childObject = new JSONObject();  
+    	
+    	if(visitedTerms == null)
+    		visitedTerms = new ArrayList<String>();
+    	
+    	AbstractRepository repo = getRepoImpl(ontology);
+    	if(repo == null) {
+    		logger.warn("Ontology "+ontology+" not supported.");
+    		return "{error: \"Ontology "+ontology+" not supported.\"}";
+    	}
+    	
+		List<AbstractTerm> children = new ArrayList<AbstractTerm>();
+		
+		if(ontoClass.isEmpty()) {
+			children = repo.findByParent(parent);
+		} else {
+			children = repo.findByParent(parent, ontoClass);
+		}
+
+		for(AbstractTerm t : children) {
+			
+			if(visitedTerms.contains(t.getIri())) {
+				logger.info("Loop in the tree! " + t.getIri() + " of " + parent);
+			} else {
+				
+				
+				if(filter.equals("") || t.getLabel().contains(filter)) {
+					childObject.append("id", t.getIri());			
+					childObject.append("text", t.getLabel());
+				}
+				
+				// go recursive. To be able to handle the returned string
+				// it has to be converted back to JSON, so the method can stay in 1 function
+				JSONArray childrenJSON = new JSONArray(getTree(t.getIri(), ontology, ontoClass, filter));
+				if(childrenJSON.length() > 0)
+					childObject.append("children", childrenJSON);
+				
+				if(childObject.length() > 0)
+					childrenArray.put(childObject);
+				childObject = new JSONObject();  
+			}
+		}   	
+    	
+		if(childrenArray.length() > 0)
+			returnObject.put(childrenArray);
+			
+    	
+    	return returnObject.toString();
+    }
+    
 	
 	/**
 	 * Returns the terms that have the parent specified in the parameter
 	 * Uses the CHILD_OF relation
 	 * 
-	 * @param iri
+     * @param parent
+     * @param ontology
+     * @param ontoClass
 	 * @return
 	 */
     @RequestMapping("/getchildren")
@@ -252,31 +356,8 @@ public class OLSCallController {
     	JSONObject returnObject = new JSONObject();
     	JSONArray childrenArray = new JSONArray();    	
     	
-    	AbstractRepository repo;
-    	
-    	switch(ontology) {
-    	case "go":
-    		repo = ebiOlsRepo;
-    		break;
-    	case "ncit":
-    		repo = oboNcitRepo;
-    		break;
-    	case "ncbitaxon":
-    		repo = ncbiTaxonRepo;
-    		break;
-    	case "mondo":
-    		repo = mondoRepo; 
-    		break;
-    	case "chebi":
-    		repo = chebiRepo;
-    		break;
-    	case "bao":
-    		repo = baoRepo;
-    		break;    		
-    	case "cellosaurus":
-    		repo = cellosaurusRepo;
-    		break;    		
-    	default: 
+    	AbstractRepository repo = getRepoImpl(ontology);
+    	if(repo == null) {
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
     	}
@@ -319,38 +400,12 @@ public class OLSCallController {
 		
     	JSONObject returnObject = new JSONObject();
     	JSONArray suggestArray = new JSONArray();
-		
-    	AbstractRepository repo;
-    	
-    	switch(ontology) {
-    	case "go":
-    		repo = ebiOlsRepo;
-    		break;
-    	case "ncit":
-    		repo = oboNcitRepo;
-    		break;
-    	case "ncbitaxon":
-    		repo = ncbiTaxonRepo;
-    		break;
-    	case "mondo":
-    		repo = mondoRepo;
-    		break;
-    	case "chebi":
-    		repo = chebiRepo;
-    		break;
-    	case "uniprot":
-    		repo = uniprotRepo;
-    		break;
-    	case "bao":
-    		repo = baoRepo;
-    		break;
-    	case "cellosaurus":
-    		repo = cellosaurusRepo;
-    		break;          
-    	default: 
+		   	
+    	AbstractRepository repo = getRepoImpl(ontology);
+    	if(repo == null) {
     		logger.warn("Ontology "+ontology+" not supported.");
     		return "{error: \"Ontology "+ontology+" not supported.\"}";
-    	}		
+    	}	
 		
     	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
     	
