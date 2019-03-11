@@ -44,23 +44,23 @@ public abstract class AbstractTerm {
 		JSONObject output = new JSONObject();
 		
 		// add type, fixed
-		output.append("@type", "skos:Concept");
+		output.put("@type", "skos:Concept");
 		// add an ID, which is the IRI of the term
-		output.append("@ID", this.iri);
+		output.put("@ID", this.iri);
 		
 		// sub-object for storing the label + language info
 		JSONObject labelObject = new JSONObject();		
 		labelObject.put("@value", this.label);
 		labelObject.put("@language", "@eng");
 		
-		output.append("skos:prefLabel", labelObject);
+		output.put("skos:prefLabel", labelObject);
 		
 		// sub-object for storing the label + language info		
 		JSONObject synonymObject = new JSONObject();		
 		synonymObject.put("@value", this.synonym);
 		synonymObject.put("@language", "@eng");
 		
-		output.append("skos:altLabel", synonymObject);
+		output.put("skos:altLabel", synonymObject);
 		
 		return output;
 	}
