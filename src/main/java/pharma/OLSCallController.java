@@ -288,6 +288,52 @@ public class OLSCallController {
     		@RequestParam(value="class", defaultValue="") String ontoClass,
     		@RequestParam(value="filter", defaultValue="") String filter){
     
+    	JSONObject resultObject = new JSONObject();
+    	
+    	// Get the unfiltered results
+    	JSONArray result = getTreeRecursion(parent, ontology, ontoClass, filter);
+
+
+    	// Do the filtering - we keep the matching terms + all their parents
+    	//if(!filter.equals("")) {
+    	//	result = filterGetTreeResults(result, filter);
+    	//}
+    	
+    	
+    	
+    	resultObject.put("getTree", result);
+    	
+    	
+    	
+    	
+    	return resultObject.toString();
+
+    }
+    
+    
+    /**
+     * Filters a given getTree result array
+     * Keeps:
+     * - matching terms
+     * - all the parents of the matching terms
+     * @param original
+     * @param filter
+     * @return
+     */
+    private JSONArray filterGetTreeResults(JSONArray orig, String filter) {
+    	return null;
+    	
+    }
+    
+    /**
+     * Recursive function to get the tree - to be wrapped into the result object
+     * @param parent
+     * @param ontology
+     * @param ontoClass
+     * @param filter
+     * @return
+     */
+    private JSONArray getTreeRecursion(String parent, String ontology, String ontoClass, String filter) {
     	JSONArray returnObject = new JSONArray();
     	JSONArray childrenArray = new JSONArray();
     	JSONObject childObject = new JSONObject();  
@@ -298,7 +344,7 @@ public class OLSCallController {
     	AbstractRepository repo = getRepoImpl(ontology);
     	if(repo == null) {
     		logger.warn("Ontology "+ontology+" not supported.");
-    		return "{error: \"Ontology "+ontology+" not supported.\"}";
+    		return new JSONArray("error");
     	}
     	
 		List<AbstractTerm> children = new ArrayList<AbstractTerm>();
@@ -314,8 +360,7 @@ public class OLSCallController {
 			if(visitedTerms.contains(t.getIri())) {
 				logger.info("Loop in the tree! " + t.getIri() + " of " + parent);
 			} else {
-				
-				
+
 				if(filter.equals("") || t.getLabel().contains(filter)) {
 					childObject.append("id", t.getIri());			
 					childObject.append("text", t.getLabel());
@@ -323,9 +368,9 @@ public class OLSCallController {
 				
 				// go recursive. To be able to handle the returned string
 				// it has to be converted back to JSON, so the method can stay in 1 function
-				JSONArray childrenJSON = new JSONArray(getTree(t.getIri(), ontology, ontoClass, filter));
+				JSONArray childrenJSON = getTreeRecursion(t.getIri(), ontology, ontoClass, filter);
 				if(childrenJSON.length() > 0)
-					childObject.append("children", childrenJSON);
+					childObject.put("children", childrenJSON);
 				
 				if(childObject.length() > 0)
 					childrenArray.put(childObject);
@@ -337,9 +382,8 @@ public class OLSCallController {
 			returnObject.put(childrenArray);
 			
     	
-    	return returnObject.toString();
+    	return returnObject;
     }
-    
 	
 	/**
 	 * Returns the terms that have the parent specified in the parameter
