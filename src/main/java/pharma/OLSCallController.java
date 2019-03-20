@@ -362,8 +362,8 @@ public class OLSCallController {
 			} else {
 
 				if(filter.equals("") || t.getLabel().contains(filter)) {
-					childObject.append("id", t.getIri());			
-					childObject.append("text", t.getLabel());
+					childObject.put("id", t.getIri());			
+					childObject.put("text", t.getLabel());
 				}
 				
 				// go recursive. To be able to handle the returned string
