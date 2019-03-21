@@ -295,9 +295,9 @@ public class OLSCallController {
 
 
     	// Do the filtering - we keep the matching terms + all their parents
-    	//if(!filter.equals("")) {
-    	//	result = filterGetTreeResults(result, filter);
-    	//}
+    	if(!filter.equals("")) {
+    		result = filterGetTreeResults(result, filter);
+    	}
     	
     	
     	
@@ -321,8 +321,39 @@ public class OLSCallController {
      * @return
      */
     private JSONArray filterGetTreeResults(JSONArray orig, String filter) {
-    	return null;
     	
+    	boolean keep = false;
+    	
+    	for(int i = 0; i < orig.length(); i ++) {
+    		JSONObject origElem = (JSONObject) orig.get(i);
+    		if(origElem.has("children")) {
+    			JSONArray child = (JSONArray) origElem.get("children");
+	    		
+	    		JSONArray grandchild = filterGetTreeResults((JSONArray) child, filter);
+	    		
+	    		if(descendantsMatch(grandchild, filter))
+	    			keep = true; 
+    		}
+    	}
+    	
+    	if(keep)
+    		return orig;
+    	else
+    		return new JSONArray();
+    	
+    }
+    
+    /**
+     * Check if one the descendants of a term match the filter
+     * @param orig
+     * @param filter
+     * @return
+     */
+    private boolean descendantsMatch(JSONArray orig, String filter) {
+    	if(orig.toString().contains(filter))
+    		return true;
+    	else
+    		return false;
     }
     
     /**
@@ -361,13 +392,14 @@ public class OLSCallController {
 				logger.info("Loop in the tree! " + t.getIri() + " of " + parent);
 			} else {
 
-				if(filter.equals("") || t.getLabel().contains(filter)) {
+				//if(filter.equals("") || t.getLabel().contains(filter)) {
 					childObject.put("id", t.getIri());			
 					childObject.put("text", t.getLabel());
-				}
+				//}
 				
 				// go recursive. To be able to handle the returned string
 				// it has to be converted back to JSON, so the method can stay in 1 function
+				// TODO there should be one array less - is it possible to evade [[-s??
 				JSONArray childrenJSON = getTreeRecursion(t.getIri(), ontology, ontoClass, filter);
 				if(childrenJSON.length() > 0)
 					childObject.put("children", childrenJSON);
