@@ -291,7 +291,7 @@ public class OLSCallController {
     	JSONObject resultObject = new JSONObject();
     	
     	// Get the unfiltered results
-    	JSONArray result = getTreeRecursion(parent, ontology, ontoClass, filter);
+    	JSONArray result = getTreeRecursion(parent, ontology, ontoClass);
 
 
     	// Do the filtering - we keep the matching terms + all their parents
@@ -300,8 +300,10 @@ public class OLSCallController {
     	}
     	
     	
-    	
-    	resultObject.put("getTree", result);
+    	// root object
+    	resultObject.put("id", parent);
+    	resultObject.put("text", "root");
+    	resultObject.put("children", result);
     	
     	
     	
@@ -364,7 +366,7 @@ public class OLSCallController {
      * @param filter
      * @return
      */
-    private JSONArray getTreeRecursion(String parent, String ontology, String ontoClass, String filter) {
+    private JSONArray getTreeRecursion(String parent, String ontology, String ontoClass) {
     	JSONArray returnObject = new JSONArray();
     	JSONArray childrenArray = new JSONArray();
     	JSONObject childObject = new JSONObject();  
@@ -392,15 +394,10 @@ public class OLSCallController {
 				logger.info("Loop in the tree! " + t.getIri() + " of " + parent);
 			} else {
 
-				//if(filter.equals("") || t.getLabel().contains(filter)) {
-					childObject.put("id", t.getIri());			
-					childObject.put("text", t.getLabel());
-				//}
-				
-				// go recursive. To be able to handle the returned string
-				// it has to be converted back to JSON, so the method can stay in 1 function
-				// TODO there should be one array less - is it possible to evade [[-s??
-				JSONArray childrenJSON = getTreeRecursion(t.getIri(), ontology, ontoClass, filter);
+				childObject.put("id", t.getIri());			
+				childObject.put("text", t.getLabel());
+
+				JSONArray childrenJSON = getTreeRecursion(t.getIri(), ontology, ontoClass);
 				if(childrenJSON.length() > 0)
 					childObject.put("children", childrenJSON);
 				
@@ -414,7 +411,7 @@ public class OLSCallController {
 			returnObject.put(childrenArray);
 			
     	
-    	return returnObject;
+    	return childrenArray;
     }
 	
 	/**
