@@ -291,17 +291,19 @@ public class OLSCallController {
     	JSONObject resultObject = new JSONObject();
     	
     	// Get the unfiltered results
-    	JSONArray result = getTreeRecursion(parent, ontology, ontoClass, filter);
+    	JSONArray result = getTreeRecursion(parent, ontology, ontoClass);
 
 
     	// Do the filtering - we keep the matching terms + all their parents
-    	//if(!filter.equals("")) {
-    	//	result = filterGetTreeResults(result, filter);
-    	//}
+    	if(!filter.equals("")) {
+    		result = filterGetTreeResults(result, filter);
+    	}
     	
     	
-    	
-    	resultObject.put("getTree", result);
+    	// root object
+    	resultObject.put("id", parent);
+    	resultObject.put("text", "root");
+    	resultObject.put("children", result);
     	
     	
     	
@@ -321,8 +323,39 @@ public class OLSCallController {
      * @return
      */
     private JSONArray filterGetTreeResults(JSONArray orig, String filter) {
-    	return null;
     	
+    	boolean keep = false;
+    	
+    	for(int i = 0; i < orig.length(); i ++) {
+    		JSONObject origElem = (JSONObject) orig.get(i);
+    		if(origElem.has("children")) {
+    			JSONArray child = (JSONArray) origElem.get("children");
+	    		
+	    		JSONArray grandchild = filterGetTreeResults((JSONArray) child, filter);
+	    		
+	    		if(descendantsMatch(grandchild, filter))
+	    			keep = true; 
+    		}
+    	}
+    	
+    	if(keep)
+    		return orig;
+    	else
+    		return new JSONArray();
+    	
+    }
+    
+    /**
+     * Check if one the descendants of a term match the filter
+     * @param orig
+     * @param filter
+     * @return
+     */
+    private boolean descendantsMatch(JSONArray orig, String filter) {
+    	if(orig.toString().contains(filter))
+    		return true;
+    	else
+    		return false;
     }
     
     /**
@@ -333,7 +366,7 @@ public class OLSCallController {
      * @param filter
      * @return
      */
-    private JSONArray getTreeRecursion(String parent, String ontology, String ontoClass, String filter) {
+    private JSONArray getTreeRecursion(String parent, String ontology, String ontoClass) {
     	JSONArray returnObject = new JSONArray();
     	JSONArray childrenArray = new JSONArray();
     	JSONObject childObject = new JSONObject();  
@@ -361,14 +394,10 @@ public class OLSCallController {
 				logger.info("Loop in the tree! " + t.getIri() + " of " + parent);
 			} else {
 
-				if(filter.equals("") || t.getLabel().contains(filter)) {
-					childObject.put("id", t.getIri());			
-					childObject.put("text", t.getLabel());
-				}
-				
-				// go recursive. To be able to handle the returned string
-				// it has to be converted back to JSON, so the method can stay in 1 function
-				JSONArray childrenJSON = getTreeRecursion(t.getIri(), ontology, ontoClass, filter);
+				childObject.put("id", t.getIri());			
+				childObject.put("text", t.getLabel());
+
+				JSONArray childrenJSON = getTreeRecursion(t.getIri(), ontology, ontoClass);
 				if(childrenJSON.length() > 0)
 					childObject.put("children", childrenJSON);
 				
@@ -382,7 +411,7 @@ public class OLSCallController {
 			returnObject.put(childrenArray);
 			
     	
-    	return returnObject;
+    	return childrenArray;
     }
 	
 	/**
