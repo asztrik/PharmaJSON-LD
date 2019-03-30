@@ -50,6 +50,12 @@ returns all the children of a given parent IRI from an ontology  (or its class)
 
 returns all the descendants of a term containing the filter expression. If the filter is empty, returns all the children of children recursively
 
+## CHECKIRI
+
+**checkIri(iri (IRI), ontology ({GO, NCIT, CHEBI, NCBITAXON, MONDO, UNIPROT, BAO, CELLOSAURUS}))**
+
+helper method - returns true if the queried IRI exists in the database, false otherwise.
+
 # Request and Configuration Examples
 
 Searching for "rat" in the labels of the NCIT terms:
@@ -156,7 +162,12 @@ GetTree:
 ]
 ```
 
+CheckIri:
+(Request: http://localhost:9999/checkIri?iri=CVCL_0031&ontology=cellosaurus)
 
+```
+{"response":false}
+```
 
 Update:
 (Request: http://localhost:9999/update)
