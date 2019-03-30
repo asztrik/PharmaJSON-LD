@@ -53,13 +53,13 @@ returns all the descendants of a term containing the filter expression. If the f
 # Request and Configuration Examples
 
 Searching for "rat" in the labels of the NCIT terms:
-http://localhost:9999/suggest?label=rat&ontology=ncit&class=NCITC12219
+http://localhost:9999/suggest?label=rat&ontology=ncit&class=NCITC:12219
 
 Searching for "cell" in the Chebi ontology: (Note: no class is specified, because the Chebi ontology has no saved classes)
 http://localhost:9999/suggest?label=cell&ontology=chebi
 
 Listing the children of the term which has "C60743" in its IRI from the NCIT ontology's NCITC12219 class
-http://localhost:9999/getchildren?parent=C60743&ontology=ncit&clas=NCITC12219
+http://localhost:9999/getchildren?parent=C60743&ontology=ncit&class=NCITC:12219
 
 Listing the children of the term which has "01234567" in its IRI:
 http://localhost:9999/getchildren?parent=01234567&ontology=mondo
