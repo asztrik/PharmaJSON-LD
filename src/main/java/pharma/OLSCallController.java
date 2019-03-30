@@ -146,14 +146,14 @@ public class OLSCallController {
 			logger.info("Fetching EBI OLS terms...");
 			for(int i = 1; i < 6; i++) {
 				logger.info("ebiols"+String.valueOf(i));
-				updateParentPath(ebiOlsConn, prop.getProperty("ebiols"+String.valueOf(i)), ebiOlsRepo, prop.getProperty("ebiols"+String.valueOf(i)).replaceAll(":", ""));
+				updateParentPath(ebiOlsConn, prop.getProperty("ebiols"+String.valueOf(i)), ebiOlsRepo, prop.getProperty("ebiols"+String.valueOf(i)));
 			}			
 			
 			// Fetch NCIT terms
 			logger.info("Fetching OBO NCIT terms...");
 			for(int i = 1; i < 6; i++) {
 				logger.info("oboncit"+String.valueOf(i));
-				updateParentPath(oboNcitConn, prop.getProperty("oboncit"+String.valueOf(i)), oboNcitRepo, prop.getProperty("oboncit"+String.valueOf(i)).replaceAll(":", ""));
+				updateParentPath(oboNcitConn, prop.getProperty("oboncit"+String.valueOf(i)), oboNcitRepo, prop.getProperty("oboncit"+String.valueOf(i)));
 			}			
 			
 			// Fetch Mondo terms
@@ -456,6 +456,37 @@ public class OLSCallController {
     	
     }
 	
+    
+    
+    
+    
+    @RequestMapping("/checkIri")
+    public String checkIri(
+    		@RequestParam(value="iri", defaultValue="") String iri,
+    		@RequestParam(value="ontology", defaultValue="") String ontology,
+    		@RequestParam(value="class", defaultValue="") String ontoClass) {
+    
+    	AbstractRepository repo = getRepoImpl(ontology);
+    	if(repo == null) {
+    		logger.warn("Ontology "+ontology+" not supported.");
+    		return "{error: \"Ontology "+ontology+" not supported.\"}";
+    	}
+    	
+    	List<AbstractTerm> hits = new ArrayList<AbstractTerm>();
+    	JSONObject resp = new JSONObject();
+    	
+		hits = repo.findByIri(iri);
+		logger.warn(hits.toString()+" "+hits.size());
+		
+		if (hits.isEmpty())
+			resp.put("response", false);
+		else
+			resp.put("response", true);
+		
+		return resp.toString();
+    	
+    }
+    
     
     /**
      * 
