@@ -46,7 +46,7 @@ public abstract class AbstractTerm {
 		// add type, fixed
 		output.put("@type", "skos:Concept");
 		// add an ID, which is the IRI of the term
-		output.put("@ID", this.iri);
+		output.put("@IRI", this.iri);
 		
 		// sub-object for storing the label + language info
 		JSONObject labelObject = new JSONObject();		

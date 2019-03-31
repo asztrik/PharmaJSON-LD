@@ -299,10 +299,17 @@ public class OLSCallController {
     		result = filterGetTreeResults(result, filter);
     	}
     	
+    	AbstractRepository repo = getRepoImpl(ontology);
+    	if(repo == null) {
+    		logger.warn("Ontology "+ontology+" not supported.");
+    		return new JSONArray("error").toString();
+    	}
+    	
+    	
     	
     	// root object
-    	resultObject.put("id", parent);
-    	resultObject.put("text", "root");
+    	resultObject.put("iri", parent);
+    	resultObject.put("label", repo.findByIri(parent).get(0).getLabel());
     	resultObject.put("children", result);
     	
     	
@@ -323,26 +330,37 @@ public class OLSCallController {
      * @return
      */
     private JSONArray filterGetTreeResults(JSONArray orig, String filter) {
-    	
-    	boolean keep = false;
-    	
-    	for(int i = 0; i < orig.length(); i ++) {
-    		JSONObject origElem = (JSONObject) orig.get(i);
-    		if(origElem.has("children")) {
-    			JSONArray child = (JSONArray) origElem.get("children");
-	    		
-	    		JSONArray grandchild = filterGetTreeResults((JSONArray) child, filter);
-	    		
-	    		if(descendantsMatch(grandchild, filter))
-	    			keep = true; 
+    	logger.info("O"+orig.toString());
+    	if(descendantsMatch(orig, filter)) {
+    		JSONArray matchingDescendants = new JSONArray();
+    		for(int i = 0; i < orig.length(); i ++) {
+        		JSONObject origChild = (JSONObject) orig.get(i);
+        		
+        		if(origChild.has("children")) {
+        			JSONArray matchingGrandchildren = filterGetTreeResults((JSONArray) origChild.get("children"), filter);
+        			logger.info("MGC:"+matchingGrandchildren.toString());
+        			if(matchingGrandchildren.length() > 0) {
+        				logger.info("Matching grandchild!");
+        				JSONObject matchingChild = new JSONObject();
+            			matchingChild.put("iri", origChild.get("iri"));
+            			matchingChild.put("label", origChild.get("label"));
+            			matchingChild.put("children", matchingGrandchildren);
+            			matchingDescendants.put(matchingChild);
+        			}
+        		} else {
+        			// we are at a leaf, if matches add it, otherwise skip
+        			if(origChild.get("label").toString().contains(filter)) {
+        				JSONObject matchingChild = new JSONObject();
+            			matchingChild.put("iri", origChild.get("iri"));
+            			matchingChild.put("label", origChild.get("label"));
+            			matchingDescendants.put(matchingChild);
+        			}
+        		}
     		}
-    	}
-    	
-    	if(keep)
-    		return orig;
-    	else
+    		return matchingDescendants;
+    	} else {
     		return new JSONArray();
-    	
+    	}
     }
     
     /**
@@ -394,8 +412,8 @@ public class OLSCallController {
 				logger.info("Loop in the tree! " + t.getIri() + " of " + parent);
 			} else {
 
-				childObject.put("id", t.getIri());			
-				childObject.put("text", t.getLabel());
+				childObject.put("iri", t.getIri());			
+				childObject.put("label", t.getLabel());
 
 				JSONArray childrenJSON = getTreeRecursion(t.getIri(), ontology, ontoClass);
 				if(childrenJSON.length() > 0)
@@ -459,7 +477,13 @@ public class OLSCallController {
     
     
     
-    
+    /**
+     * Helper method to check whether a term is in the DB or not
+     * @param iri
+     * @param ontology
+     * @param ontoClass
+     * @return
+     */
     @RequestMapping("/checkIri")
     public String checkIri(
     		@RequestParam(value="iri", defaultValue="") String iri,
