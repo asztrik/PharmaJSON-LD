@@ -22,7 +22,7 @@ public class MondoConnector extends AbstractOlsConnector {
 
 	protected MondoRepository MondoRepo;
 	
-	protected final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/mondo/children?id=";
+	protected String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/mondo/children?id=";
 	
     private static final Logger logger = LoggerFactory.getLogger(MondoConnector.class);
 	
@@ -39,6 +39,11 @@ public class MondoConnector extends AbstractOlsConnector {
 		
 		this.MondoRepo = eor;
 		this.iri = iri;
+		
+		// This adds a &size parameter to the URL so that it returns
+		// all the terms, without paging
+		this.baseUrl = appendPageToBaseurl(this.baseUrl);
+		
 		
 		try {
 			this.url = new URL(
@@ -73,7 +78,7 @@ public class MondoConnector extends AbstractOlsConnector {
 			e.printStackTrace();
 		}
 		
-		JSONArray terms = connectAndGetJSON();
+		JSONArray terms = connectAndGetJSON(ConnectionPurpose.TERMS);
 		  	
     	// get the terms one by one
     	for (int i=0; i < terms.length(); i++) {
@@ -107,7 +112,7 @@ public class MondoConnector extends AbstractOlsConnector {
 		}
 	
 		// All the terms for one query as array
-    	JSONArray terms = connectAndGetJSON();
+    	JSONArray terms = connectAndGetJSON(ConnectionPurpose.TERMS);
     	
     	HashMap<String, String> parentLinkList = new HashMap<String, String>();
     	
@@ -174,9 +179,13 @@ public class MondoConnector extends AbstractOlsConnector {
 
 	public void setIri(String iri) {
 		this.iri = iri;
+		// This adds a &size parameter to the URL so that it returns
+		// all the terms, without paging
+		String combinedUrl = appendPageToBaseurl(this.baseUrl+this.iri);
+
 		try {
 			this.url = new URL(
-					baseUrl+this.iri);
+					combinedUrl);
 		} catch (MalformedURLException e1) {
 			e1.printStackTrace();
 		}

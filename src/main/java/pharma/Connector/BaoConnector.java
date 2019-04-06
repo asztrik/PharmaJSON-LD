@@ -24,7 +24,7 @@ public class BaoConnector  extends AbstractOlsConnector {
 
 	protected BaoRepository baoRepo;
 	
-	protected final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/bao/terms/";
+	protected String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/bao/terms/";
 	
 	
 	
@@ -43,6 +43,11 @@ public class BaoConnector  extends AbstractOlsConnector {
 		
 		this.baoRepo = repo;
 		this.iri = iri;
+
+		// This adds a &size parameter to the URL so that it returns
+		// all the terms, without paging
+		this.baseUrl = appendPageToBaseurl(this.baseUrl);
+
 		
 		try {
 			this.url = new URL(
@@ -70,7 +75,7 @@ public class BaoConnector  extends AbstractOlsConnector {
 	}
 
 	// All the terms for one query as array
-	JSONArray terms = connectAndGetJSON();
+	JSONArray terms = connectAndGetJSON(ConnectionPurpose.TERMS);
 	
 	HashMap<String, String> parentLinkList = new HashMap<String, String>();
 	
@@ -125,7 +130,7 @@ public class BaoConnector  extends AbstractOlsConnector {
 			e.printStackTrace();
 		}
 		
-		JSONArray terms = connectAndGetJSON();
+		JSONArray terms = connectAndGetJSON(ConnectionPurpose.TERMS);
 		  	
     	// get the terms one by one
     	for (int i=0; i < terms.length(); i++) {

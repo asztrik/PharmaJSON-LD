@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import org.json.JSONArray;
@@ -32,7 +33,7 @@ public abstract class AbstractOlsConnector implements ExternalServiceConnector {
 	 * @return
 	 * @throws ExternalServiceConnectorException
 	 */
-	public JSONArray connectAndGetJSON() throws ExternalServiceConnectorException {
+	public JSONArray connectAndGetJSON(ConnectionPurpose cp) throws ExternalServiceConnectorException {
 		
 		try {
 			conn = (HttpURLConnection) this.url.openConnection();
@@ -69,8 +70,16 @@ public abstract class AbstractOlsConnector implements ExternalServiceConnector {
 		JSONArray result = new JSONArray();
 		
 		try {
-			// on success: there are multiple children
-			result = json.getJSONObject("_embedded").getJSONArray("terms");		
+			
+			if(cp.equals(ConnectionPurpose.TERMS)) {
+				// on success: there are multiple children
+				result = json.getJSONObject("_embedded").getJSONArray("terms");
+			} else if(cp.equals(ConnectionPurpose.PAGES)) {
+				result = new JSONArray();
+				result.put(json.getJSONObject("page").get("totalElements"));
+			}
+			
+					
 		} catch (JSONException je) {
 			// on fail: no children recursion should end.
 			result = null;
@@ -112,6 +121,44 @@ public abstract class AbstractOlsConnector implements ExternalServiceConnector {
 	}
 		
 
+	/**
+	 * Helper function to fix the paging problem of the OLS
+	 * The OLS returns by default only a 20 long page of the child-list
+	 * This excludes some elements of the result. Appending the ?size=N& to
+	 * the requests makes all the terms available on one page.
+	 * 
+	 * Why so and why not handle paging?
+	 * 
+	 * A JSON of 20 records is 16 kB, approx. 2000 children would result 
+	 * in a ~ 2 MB response, which is still OK to handle. Note: this is
+	 * only a part of the update method, which is only supposed to run 
+	 * weekly to fill the DB and not to serve user requests.
+	 * @param originalUrl
+	 * @return
+	 */
+	public String appendPageToBaseurl(String originalUrl) {
+		
+		int totalElementNum = 0;
+		
+		// first load the page
+		try {
+			this.url = new URL(originalUrl);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}		
+		
+		//extract the "pages" Object & get total size
+		try {
+			totalElementNum = (int) connectAndGetJSON(ConnectionPurpose.PAGES).get(0);
+		} catch (ExternalServiceConnectorException e) {
+			e.printStackTrace();
+		}		
+		
+		// append size parameter
+		String newUrl = originalUrl.replace("?id", "?size=" + String.valueOf(totalElementNum) + "&id");
+		return newUrl;
+	}
+	
 	@Override
 	public AbstractTerm retrieveAsJSON(String iri) {
 		// TODO Auto-generated method stub
