@@ -28,6 +28,62 @@ public abstract class AbstractOlsConnector implements ExternalServiceConnector {
 	
     private static final Logger logger = LoggerFactory.getLogger(AbstractOlsConnector.class);
 	
+    
+    /**
+     * Save only one term, taking the URL set for the caller class
+     * and not fetching the children. Used to save the Class parent (topmost) term.
+     * @throws ExternalServiceConnectorException 
+     */
+    public AbstractTerm saveOneTerm(String ontoClass, AbstractTerm pt) throws ExternalServiceConnectorException {
+		
+    	try {
+			conn = (HttpURLConnection) this.url.openConnection();
+			conn.setRequestMethod("GET");
+			conn.setRequestProperty("Accept", "application/json");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}    	
+		
+		JSONObject json = null;
+		
+		try {
+			if (conn.getResponseCode() != 200) {
+			    throw new RuntimeException("Failed : HTTP error code : "
+			        + conn.getResponseCode());
+			    }		
+	        StringBuilder sb = new StringBuilder();        
+	        String line;       
+	        BufferedReader br = new BufferedReader(new InputStreamReader(
+	                (this.conn.getInputStream())));
+	        while ((line = br.readLine()) != null) {
+	            sb.append(line);
+	        }        
+	        
+	        if(sb.toString().isEmpty())
+	        	throw new ExternalServiceConnectorException("Empty response from " + conn.getURL());	
+	        	
+	        json = new JSONObject(sb.toString());
+	        
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		try {
+			pt.setIri(json.getString("iri"));
+			pt.setLabel(json.getString("label"));
+			pt.setSynonym(json.getString("label"));
+			pt.setOntoClass(ontoClass);
+		} catch (JSONException je) {
+
+		}
+		
+		logger.info("SOT get "+pt.getIri());
+		
+		return pt;
+    }
+    
+    
 	/**
 	 * Connects to the url set for this class and retrieves all the terms to one IRI as JSONArray
 	 * @return

@@ -218,10 +218,15 @@ public class OLSCallController {
 		HashMap<String, String> urlsOTermParents = new HashMap<String, String>();
 		
 		try {
-		
-			if(classParentTerm != null)
-				esc.setIri(classParentTerm);
+			
 			esc.setRepo(repo);
+		
+			if(classParentTerm != null) {
+				//save class parent term first
+				esc.setIri(classParentTerm);
+				esc.saveOne(classParentTerm, ontoClass);
+			}
+			
 			urlsOTermParents.putAll(esc.queryAndStoreOLS(ontoClass));
 		
 			for(Entry<String, String> entry : urlsOTermParents.entrySet()) {

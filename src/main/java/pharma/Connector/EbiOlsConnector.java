@@ -1,9 +1,11 @@
 package pharma.Connector;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Term.AbstractTerm;
+import pharma.Term.BaoTerm;
 import pharma.Term.EbiOlsTerm;
 
 @Service
@@ -193,5 +196,23 @@ public class EbiOlsConnector extends AbstractOlsConnector {
 		}
 	}
 		
+	/**
+	 * fetches and saves one term
+	 */
+	public void saveOne(String iri, String ontoclass) {
+		this.iri = iri;
+		try {
+			this.url = new URL(
+					"https://www.ebi.ac.uk/ols/api/ontologies/go/terms/"+URLEncoder.encode(URLEncoder.encode(this.iri, "UTF-8"), "UTF-8"));
+		} catch (MalformedURLException e1) {
+		} catch (UnsupportedEncodingException e) {
+		}		
+		EbiOlsTerm term = new EbiOlsTerm();
+		try {
+			term = (EbiOlsTerm)saveOneTerm(ontoclass, term);
+			ebiOlsRepo.save(term);
+		} catch (ExternalServiceConnectorException e) {
+		}
+	}	
 
 }

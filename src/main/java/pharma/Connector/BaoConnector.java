@@ -68,52 +68,72 @@ public class BaoConnector  extends AbstractOlsConnector {
 		this.conn.setRequestProperty("Accept", "application/json");
 	}	
 	
+	
+	/**
+	 * fetches and saves one term
+	 */
+	public void saveOne(String iri, String ontoclass) {
+		this.iri = iri;
+		try {
+			this.url = new URL(
+					baseUrl+URLEncoder.encode(URLEncoder.encode(this.iri, "UTF-8"), "UTF-8"));
+		} catch (MalformedURLException e1) {
+		} catch (UnsupportedEncodingException e) {
+		}		
+		BaoTerm term = new BaoTerm();
+		try {
+			term = (BaoTerm)saveOneTerm(ontoclass, term);
+			baoRepo.save(term);
+		} catch (ExternalServiceConnectorException e) {
+		}
+	}
+	
 	@Override
 	public HashMap<String, String> queryAndStoreOLS(String ontoClass) throws ExternalServiceConnectorException {
 		if(this.iri.isEmpty() || this.iri == null) {
 			throw new ExternalServiceConnectorException("Iri is not set, the OLS would give 404");	
-	}
-
-	// All the terms for one query as array
-	JSONArray terms = connectAndGetJSON(ConnectionPurpose.TERMS);
+		}
 	
-	HashMap<String, String> parentLinkList = new HashMap<String, String>();
+			// All the terms for one query as array
+		JSONArray terms = connectAndGetJSON(ConnectionPurpose.TERMS);
+		
+		HashMap<String, String> parentLinkList = new HashMap<String, String>();
+		
+		if(terms == null)
+			return parentLinkList; // return empty list if there are no more children.
+		
+		// get the terms one by one
+		for (int i=0; i < terms.length(); i++) {
 	
-	if(terms == null)
-		return parentLinkList; // return empty list if there are no more children.
-	
-	// get the terms one by one
-	for (int i=0; i < terms.length(); i++) {
-
-		BaoTerm term = new BaoTerm();
+			BaoTerm term = new BaoTerm();
+			
+			term = (BaoTerm)retrieveTerm(terms, i,  ontoClass, term);
+			
+			parentLinkList.put( term.getIri(), terms.getJSONObject(i).getJSONObject("_links").getJSONObject("parents").getString("href"));
+			
+			try {
+				baoRepo.save(term);
+			} catch (DataIntegrityViolationException e) {
+				logger.info(term.getIri() + " - duplicate IRI, not saved.");
+			}    		
+			
+			// Now get the iri
+			String iri = term.getIri();
+			
+			// Format for the next request
+			iri.replace("http://purl.obolibrary.org/obo/", "");
+			iri.replace("_", ":");
+			
+			if(!visitedTerms.contains(iri)) {
+				visitedTerms.add(iri);
+				// go recursive
+				this.setIri(iri);
+				parentLinkList.putAll(this.queryAndStoreOLS(ontoClass));
+			}		
+			
+		}
 		
-		term = (BaoTerm)retrieveTerm(terms, i,  ontoClass, term);
-		
-		parentLinkList.put( term.getIri(), terms.getJSONObject(i).getJSONObject("_links").getJSONObject("parents").getString("href"));
-		
-		try {
-			baoRepo.save(term);
-		} catch (DataIntegrityViolationException e) {
-			logger.info(term.getIri() + " - duplicate IRI, not saved.");
-		}    		
-		
-		// Now get the iri
-		String iri = term.getIri();
-		
-		// Format for the next request
-		iri.replace("http://purl.obolibrary.org/obo/", "");
-		iri.replace("_", ":");
-		
-		if(!visitedTerms.contains(iri)) {
-			visitedTerms.add(iri);
-			// go recursive
-			this.setIri(iri);
-			parentLinkList.putAll(this.queryAndStoreOLS(ontoClass));
-		}		
-		
-	}
-	
-	return parentLinkList;
+		return parentLinkList;
 	}
 
 	@Override

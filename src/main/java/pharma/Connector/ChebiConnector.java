@@ -1,9 +1,11 @@
 package pharma.Connector;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.ChebiRepository;
 import pharma.Term.AbstractTerm;
+import pharma.Term.BaoTerm;
 import pharma.Term.ChebiTerm;
 
 public class ChebiConnector extends  AbstractOlsConnector {
@@ -190,5 +193,24 @@ public class ChebiConnector extends  AbstractOlsConnector {
 			e1.printStackTrace();
 		}
 	}
+	
+	/**
+	 * fetches and saves one term
+	 */
+	public void saveOne(String iri, String ontoclass) {
+		this.iri = iri;
+		try {
+			this.url = new URL(
+					"https://www.ebi.ac.uk/ols/api/ontologies/chebi/terms/"+URLEncoder.encode(URLEncoder.encode(this.iri, "UTF-8"), "UTF-8"));
+		} catch (MalformedURLException e1) {
+		} catch (UnsupportedEncodingException e) {
+		}		
+		ChebiTerm term = new ChebiTerm();
+		try {
+			term = (ChebiTerm)saveOneTerm(ontoclass, term);
+			ChebiRepo.save(term);
+		} catch (ExternalServiceConnectorException e) {
+		}
+	}	
 
 }

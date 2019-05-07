@@ -181,4 +181,16 @@ public class CellosaurusConnector implements ExternalServiceConnector {
 		return null;
 	}
 
+	@Override
+	public void saveOne(String iri, String ontoclass) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public AbstractTerm saveOneTerm(String ontoClass, AbstractTerm pt) throws ExternalServiceConnectorException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

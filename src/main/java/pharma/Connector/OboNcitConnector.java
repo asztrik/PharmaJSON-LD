@@ -1,9 +1,11 @@
 package pharma.Connector;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.OboNcitRepository;
 import pharma.Term.AbstractTerm;
+import pharma.Term.BaoTerm;
 import pharma.Term.OboNcitTerm;
 
 public class OboNcitConnector extends AbstractOlsConnector {
@@ -189,5 +192,23 @@ public class OboNcitConnector extends AbstractOlsConnector {
 		}
 	}
 		
+	/**
+	 * fetches and saves one term
+	 */
+	public void saveOne(String iri, String ontoclass) {
+		this.iri = iri;
+		try {
+			this.url = new URL(
+					"https://www.ebi.ac.uk/ols/api/ontologies/ncit/terms/"+URLEncoder.encode(URLEncoder.encode(this.iri, "UTF-8"), "UTF-8"));
+		} catch (MalformedURLException e1) {
+		} catch (UnsupportedEncodingException e) {
+		}		
+		try {
+			OboNcitTerm term = new OboNcitTerm();
+			term = (OboNcitTerm)saveOneTerm(ontoclass, term);
+			OboNcitRepo.save(term);
+		} catch (ExternalServiceConnectorException e) {
+		}
+	}	
 
 }
