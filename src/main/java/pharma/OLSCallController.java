@@ -1,4 +1,4 @@
-package pharma;
+	package pharma;
 
 
 import java.util.List;
@@ -468,7 +468,7 @@ public class OLSCallController {
 			childrenArray.put(t.toJSON());
 		}   	
     	
-    	returnObject.append("getChildrenResult", childrenArray);
+    	returnObject.put("getChildrenResult", childrenArray);
     	
     	return returnObject.toString();
     	
@@ -540,9 +540,9 @@ public class OLSCallController {
 		
     	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
     	
-    	returnObject.append("@context", ontology);
+    	returnObject.put("@context", ontology);
     	if(!ontClass.isEmpty())
-			returnObject.append("class", ontClass);
+			returnObject.put("class", ontClass);
     	
     	List<AbstractTerm> hits = new ArrayList<AbstractTerm>();
     	
@@ -556,7 +556,7 @@ public class OLSCallController {
 			logger.info("Suggest hit: " + t.getIri());
 		}    	
     	
-    	returnObject.append(label, suggestArray);
+    	returnObject.put(label, suggestArray);
     	
     	return returnObject.toString();
     	

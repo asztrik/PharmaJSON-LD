@@ -30,7 +30,7 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 * @param synonym
 	 * @return
 	 */
-	@Query("MATCH (t:AbstractTerm) WHERE t.synonym CONTAINS {synonym} RETURN t")
+	@Query("MATCH (t:AbstractTerm) WHERE lower(t.synonym) CONTAINS lower({synonym}) RETURN t")
 	List<AbstractTerm> findBySynonym(@Param("synonym") String synonym);
 	
 	/**
@@ -39,7 +39,7 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 * @param className
 	 * @return
 	 */
-	@Query("MATCH (t:AbstractTerm) WHERE t.synonym CONTAINS {synonym} AND t.ontoclass CONTAINS {className} RETURN t")
+	@Query("MATCH (t:AbstractTerm) WHERE lower(t.synonym) CONTAINS lower({synonym}) AND t.ontoclass CONTAINS {className} RETURN t")
 	List<AbstractTerm> findBySynonym(@Param("synonym") String synonym, @Param("className") String className);	
 	
 	/**
