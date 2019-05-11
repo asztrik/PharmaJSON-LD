@@ -1,5 +1,6 @@
 package pharma.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.neo4j.annotation.Query;
@@ -58,4 +59,5 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 */
 	@Query("MATCH (a:AbstractTerm)-[:CHILD_OF]->(b:AbstractTerm) WHERE b.iri CONTAINS {parentIri} AND b.ontoclass CONTAINS {className} RETURN a")
 	List<AbstractTerm> findByParent(@Param("parentIri") String parentIri, @Param("className") String className);	
+		
 }

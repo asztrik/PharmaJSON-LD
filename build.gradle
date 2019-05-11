@@ -47,5 +47,6 @@ dependencies {
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('javax.xml.bind:jaxb-api')
     testCompile(group: 'org.neo4j', name: 'neo4j-ogm-test', version: '1.0.0.BUILD-SNAPSHOT', classifier: 'tests')
+    implementation 'com.google.code.gson:gson:2.8.5'
 }
 
