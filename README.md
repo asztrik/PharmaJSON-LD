@@ -11,8 +11,9 @@ It is only the core functionality, the fetched data and its fields are not final
 
 **Preparations:**
 1. Download Neo4J: https://neo4j.com/download/
-2. Start the database engine by running ./neo4j console from the downloaded program's /bin folder
-3. Make sure that a database connections is available as described in the **application.properties** file 
+2. Download the APOC plugin for Neo4J from here: https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/tag/3.5.0.3 and place the .jar file into the Neo4J installation's /plugin folder
+3. Start the database engine by running ./neo4j console from the downloaded program's /bin folder
+4. Make sure that a database connections is available as described in the **application.properties** file 
 
 **Running the service**
 
