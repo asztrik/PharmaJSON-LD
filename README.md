@@ -131,35 +131,21 @@ GetTree:
 (Request: http://localhost:9999/gettree?parent=CVCL_0030&ontology=cellosaurus&filter=AR)
 
 ```
-[
-	[{
-		"children": [
-			[
-				[{
-					"children": [
-						[
-							[{
-								"id": ["web.expasy.org/cellosaurus/CVCL_AR70"],
-								"text": ["cell line HeLa-Mitotrap-GGA2-FKBP (CVCL_AR70)"]
-							}, {
-								"id": ["web.expasy.org/cellosaurus/CVCL_AR69"],
-								"text": ["cell line HeLa-Mitotrap-Ap2a2-FKBP (CVCL_AR69)"]
-							}, {
-								"id": ["web.expasy.org/cellosaurus/CVCL_AR67"],
-								"text": ["cell line HeLa-Mitotrap-Ap1g1-FKBP (CVCL_AR67)"]
-							}]
-						]
-					],
-					"id": ["web.expasy.org/cellosaurus/CVCL_AR66"],
-					"text": ["cell line HeLa-Mitotrap (CVCL_AR66)"]
-				}]
-			]
-		]
-	}, {
-		"id": ["web.expasy.org/cellosaurus/CVCL_KT89"],
-		"text": ["cell line HeLa SilenciX PARP1 (CVCL_KT89)"]
-	}]
-]
+{"Tree":
+	[{"value":
+		{"_type":"AbstractTerm:CellosaurusTerm",
+		 "iri":"https://web.expasy.org/cellosaurus/CVCL_0030",
+		 "ontoclass":"CELLOSAURUS",
+		 "_id":2095,
+		 "label":"Cellosaurus cell line HeLa (CVCL_0030)",
+		 "child":
+		 	[
+			{"_type":"AbstractTerm:CellosaurusTerm",
+			 "iri":"https://web.expasy.org/cellosaurus/CVCL_3380",
+			 "ontoclass":"CELLOSAURUS",
+			 "_id":2134,
+			 "label":"Cellosaurus cell line HeLa 422 (CVCL_3380)"},
+			 ...
 ```
 
 CheckIri:
