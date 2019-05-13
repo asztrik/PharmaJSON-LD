@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.EbiOlsRepository;
 import pharma.Term.AbstractTerm;
-import pharma.Term.BaoTerm;
 import pharma.Term.EbiOlsTerm;
 
 @Service

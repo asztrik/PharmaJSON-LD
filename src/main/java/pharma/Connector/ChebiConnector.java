@@ -18,7 +18,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.ChebiRepository;
 import pharma.Term.AbstractTerm;
-import pharma.Term.BaoTerm;
 import pharma.Term.ChebiTerm;
 
 public class ChebiConnector extends  AbstractOlsConnector {

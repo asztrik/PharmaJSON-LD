@@ -18,7 +18,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import pharma.Exception.ExternalServiceConnectorException;
 import pharma.Repository.NcbiTaxonRepository;
 import pharma.Term.AbstractTerm;
-import pharma.Term.BaoTerm;
 import pharma.Term.NcbiTaxonTerm;
 
 public class NcbiTaxonConnector extends AbstractOlsConnector {

@@ -4,21 +4,14 @@
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-
-import com.google.gson.Gson;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-
 import pharma.Connector.BaoConnector;
 import pharma.Connector.CellosaurusConnector;
 import pharma.Connector.ChebiConnector;
@@ -91,13 +84,13 @@ public class OLSCallController {
 	private BaoConnector baoConn;
 	private CellosaurusConnector cellosaurusConn;
 	
-	// class-global helper array to make sure that the getTree method doesn't loop 
-	private ArrayList<String> visitedTerms;
-	
     private static final Logger logger = LoggerFactory.getLogger(OLSCallController.class);
 	
     
-
+    /**
+     * "Home" page...
+     * @return
+     */
 	@RequestMapping("/")
     public String home() {
 		return 
@@ -116,11 +109,10 @@ public class OLSCallController {
 			"</body>\n" + 
 			"</html>";
 	}
-    
+	
     
 	/**
      * Updates terms based on the list in application.properties
-     * It should be redone...
 	 * 
 	 **/
 	@RequestMapping("/update")
@@ -311,15 +303,32 @@ public class OLSCallController {
     	}
     	
     	
-    	Driver driver = GraphDatabase.driver( "bolt://localhost", AuthTokens.basic( "neo4j", "nincs" ) );
+		
+		Properties prop = new Properties();
+		try {
+		    //load a properties file from class path, inside static method
+		    prop.load(Application.class.getClassLoader().getResourceAsStream("application.properties"));
+
+		} 
+		catch (IOException ex) {
+		    ex.printStackTrace();
+		}
+		
+		
+    	Driver driver = GraphDatabase.driver( prop.getProperty("spring.data.neo4j.uri"), AuthTokens.basic( 
+    			prop.getProperty("spring.data.neo4j.username"), 
+    			prop.getProperty("spring.data.neo4j.password") ) 
+    			);
     	Session session = driver.session();
 
     	StatementResult result;
     	
+    	// it is running a raw Cypher query, because the result is always one "record" 
+    	// reason: the query uses the APOC plugin to convert the results into a tree
     	if(filter.isEmpty()) {
-    		result = session.run( "MATCH p=(n:AbstractTerm)<-[:CHILD_OF*]-(m) WHERE n.iri CONTAINS '"+parent+"' AND lower(n.ontoclass) CONTAINS lower('"+ontoClass+"') WITH COLLECT(p) AS ps CALL apoc.convert.toTree(ps) yield value RETURN value;" );
+    		result = session.run( "MATCH p=(n:AbstractTerm)<-[:CHILD*]-(m) WHERE n.iri CONTAINS '"+parent+"' AND lower(n.ontoclass) CONTAINS lower('"+ontoClass+"') WITH COLLECT(p) AS ps CALL apoc.convert.toTree(ps) yield value RETURN value;" );
     	} else {
-    		result = session.run( "MATCH p=(n:AbstractTerm)<-[:CHILD_OF*]-(m) WHERE n.iri CONTAINS '"+parent+"' AND lower(n.ontoclass) CONTAINS lower('"+ontoClass+"') AND m.iri CONTAINS '"+filter+"' WITH COLLECT(p) AS ps CALL apoc.convert.toTree(ps) yield value RETURN value;" );
+    		result = session.run( "MATCH p=(n:AbstractTerm)<-[:CHILD*]-(m) WHERE n.iri CONTAINS '"+parent+"' AND lower(n.ontoclass) CONTAINS lower('"+ontoClass+"') AND m.iri CONTAINS '"+filter+"' WITH COLLECT(p) AS ps CALL apoc.convert.toTree(ps) yield value RETURN value;" );
     	}
     	
     	
@@ -329,7 +338,7 @@ public class OLSCallController {
     	// consider exchanging Gson to org.json tools...
     	while ( result.hasNext() ) {
     	    Record record = result.next();
-    	    ResultJSON.put(new JSONObject(new Gson().toJson(record.asMap())));
+    	    ResultJSON.put(new JSONObject(record.asMap()));
     	}
     	session.close();
     	driver.close();    	
@@ -345,7 +354,7 @@ public class OLSCallController {
 	
 	/**
 	 * Returns the terms that have the parent specified in the parameter
-	 * Uses the CHILD_OF relation
+	 * Uses the CHILD relation
 	 * 
      * @param parent
      * @param ontology

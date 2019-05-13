@@ -1,6 +1,5 @@
 package pharma.Repository;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.neo4j.annotation.Query;
@@ -31,7 +30,7 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 * @param synonym
 	 * @return
 	 */
-	@Query("MATCH (t:AbstractTerm) WHERE lower(t.synonym) CONTAINS lower({synonym}) RETURN t")
+	@Query("MATCH (t:AbstractTerm) WHERE lower(t.synonym) CONTAINS lower({synonym}) OR lower(t.label) CONTAINS lower({synonym}) RETURN t")
 	List<AbstractTerm> findBySynonym(@Param("synonym") String synonym);
 	
 	/**
@@ -40,7 +39,7 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 * @param className
 	 * @return
 	 */
-	@Query("MATCH (t:AbstractTerm) WHERE lower(t.synonym) CONTAINS lower({synonym}) AND t.ontoclass CONTAINS {className} RETURN t")
+	@Query("MATCH (t:AbstractTerm) WHERE ( lower(t.synonym) CONTAINS lower({synonym}) OR lower(t.label) CONTAINS lower({synonym}) ) AND t.ontoclass CONTAINS {className} RETURN t")
 	List<AbstractTerm> findBySynonym(@Param("synonym") String synonym, @Param("className") String className);	
 	
 	/**
@@ -48,7 +47,7 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 * @param parent
 	 * @return
 	 */
-	@Query("MATCH (a:AbstractTerm)-[:CHILD_OF]->(b:AbstractTerm) WHERE b.iri CONTAINS {parentIri} RETURN a")
+	@Query("MATCH (a:AbstractTerm)-[:CHILD]->(b:AbstractTerm) WHERE b.iri CONTAINS {parentIri} RETURN a")
 	List<AbstractTerm> findByParent(@Param("parentIri") String parentIri);
 	
 	/**
@@ -57,7 +56,7 @@ public interface AbstractRepository extends Neo4jRepository<AbstractTerm, Long> 
 	 * @param className
 	 * @return
 	 */
-	@Query("MATCH (a:AbstractTerm)-[:CHILD_OF]->(b:AbstractTerm) WHERE b.iri CONTAINS {parentIri} AND b.ontoclass CONTAINS {className} RETURN a")
+	@Query("MATCH (a:AbstractTerm)-[:CHILD]->(b:AbstractTerm) WHERE b.iri CONTAINS {parentIri} AND b.ontoclass CONTAINS {className} RETURN a")
 	List<AbstractTerm> findByParent(@Param("parentIri") String parentIri, @Param("className") String className);	
 		
 }
