@@ -1,9 +1,11 @@
 package pharma.Connector;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 
@@ -22,7 +24,7 @@ public class OboNcitConnector extends AbstractOlsConnector {
 
 	protected OboNcitRepository OboNcitRepo;
 	
-	protected final String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/ncit/children?id=";
+	protected String baseUrl = "https://www.ebi.ac.uk/ols/api/ontologies/ncit/children?id=";
 	
     private static final Logger logger = LoggerFactory.getLogger(OboNcitConnector.class);
 	
@@ -39,6 +41,10 @@ public class OboNcitConnector extends AbstractOlsConnector {
 		
 		this.OboNcitRepo = eor;
 		this.iri = iri;
+		
+		// This adds a &size parameter to the URL so that it returns
+		// all the terms, without paging
+		this.baseUrl = appendPageToBaseurl(this.baseUrl);
 		
 		try {
 			this.url = new URL(
@@ -73,7 +79,7 @@ public class OboNcitConnector extends AbstractOlsConnector {
 			e.printStackTrace();
 		}
 		
-		JSONArray terms = connectAndGetJSON();
+		JSONArray terms = connectAndGetJSON(ConnectionPurpose.TERMS);
 		  	
     	// get the terms one by one
     	for (int i=0; i < terms.length(); i++) {
@@ -107,7 +113,7 @@ public class OboNcitConnector extends AbstractOlsConnector {
 		}
 	
 		// All the terms for one query as array
-    	JSONArray terms = connectAndGetJSON();
+    	JSONArray terms = connectAndGetJSON(ConnectionPurpose.TERMS);
     	
     	HashMap<String, String> parentLinkList = new HashMap<String, String>();
     	
@@ -172,13 +178,36 @@ public class OboNcitConnector extends AbstractOlsConnector {
 
 	public void setIri(String iri) {
 		this.iri = iri;
+		// This adds a &size parameter to the URL so that it returns
+		// all the terms, without paging
+				
+		String combinedUrl = appendPageToBaseurl(this.baseUrl+this.iri);
+
 		try {
 			this.url = new URL(
-					baseUrl+this.iri);
+					combinedUrl);
 		} catch (MalformedURLException e1) {
 			e1.printStackTrace();
 		}
 	}
 		
+	/**
+	 * fetches and saves one term
+	 */
+	public void saveOne(String iri, String ontoclass) {
+		this.iri = iri;
+		try {
+			this.url = new URL(
+					"https://www.ebi.ac.uk/ols/api/ontologies/ncit/terms/"+URLEncoder.encode(URLEncoder.encode(this.iri, "UTF-8"), "UTF-8"));
+		} catch (MalformedURLException e1) {
+		} catch (UnsupportedEncodingException e) {
+		}		
+		try {
+			OboNcitTerm term = new OboNcitTerm();
+			term = (OboNcitTerm)saveOneTerm(ontoclass, term);
+			OboNcitRepo.save(term);
+		} catch (ExternalServiceConnectorException e) {
+		}
+	}	
 
 }

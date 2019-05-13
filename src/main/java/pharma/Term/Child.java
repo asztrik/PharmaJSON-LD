@@ -13,7 +13,8 @@ import org.neo4j.ogm.annotation.StartNode;
 public class Child {
 
     @Id @GeneratedValue private Long id;
-    private List<String> parents = new ArrayList<>();
+    @SuppressWarnings("unused")
+	private List<String> parents = new ArrayList<>();
 
     @StartNode
     private AbstractTerm person;

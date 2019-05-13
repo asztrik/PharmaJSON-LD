@@ -23,5 +23,8 @@ public interface ExternalServiceConnector {
 	
 	public Object getRepo();
 	
+	public void saveOne(String iri, String ontoclass);
+	
+	public AbstractTerm saveOneTerm(String ontoClass, AbstractTerm pt) throws ExternalServiceConnectorException;
 
 }

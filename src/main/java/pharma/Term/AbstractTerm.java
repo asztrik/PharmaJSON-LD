@@ -29,9 +29,7 @@ public abstract class AbstractTerm {
 	
 	protected String ontoclass;
 	
-	/*** THIS SHOULD BE MANY-TO-MANY... ***/
-	
-	@Relationship(type = "CHILD_OF", direction = Relationship.OUTGOING)
+	@Relationship(type = "CHILD", direction = Relationship.OUTGOING)
 	protected List<AbstractTerm> hierarchy;
 
 	

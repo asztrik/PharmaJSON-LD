@@ -1,22 +1,17 @@
-package pharma;
+	package pharma;
 
 
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-
 import pharma.Connector.BaoConnector;
 import pharma.Connector.CellosaurusConnector;
 import pharma.Connector.ChebiConnector;
@@ -40,6 +35,12 @@ import pharma.Term.AbstractTerm;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.neo4j.driver.v1.AuthTokens;
+import org.neo4j.driver.v1.Driver;
+import org.neo4j.driver.v1.GraphDatabase;
+import org.neo4j.driver.v1.Record;
+import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.StatementResult;
 //Import log4j classes.
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,13 +84,13 @@ public class OLSCallController {
 	private BaoConnector baoConn;
 	private CellosaurusConnector cellosaurusConn;
 	
-	// class-global helper array to make sure that the getTree method doesn't loop 
-	private ArrayList<String> visitedTerms;
-	
     private static final Logger logger = LoggerFactory.getLogger(OLSCallController.class);
 	
     
-
+    /**
+     * "Home" page...
+     * @return
+     */
 	@RequestMapping("/")
     public String home() {
 		return 
@@ -108,11 +109,10 @@ public class OLSCallController {
 			"</body>\n" + 
 			"</html>";
 	}
-    
+	
     
 	/**
      * Updates terms based on the list in application.properties
-     * It should be redone...
 	 * 
 	 **/
 	@RequestMapping("/update")
@@ -218,10 +218,15 @@ public class OLSCallController {
 		HashMap<String, String> urlsOTermParents = new HashMap<String, String>();
 		
 		try {
-		
-			if(classParentTerm != null)
-				esc.setIri(classParentTerm);
+			
 			esc.setRepo(repo);
+		
+			if(classParentTerm != null) {
+				//save class parent term first
+				esc.setIri(classParentTerm);
+				esc.saveOne(classParentTerm, ontoClass);
+			}
+			
 			urlsOTermParents.putAll(esc.queryAndStoreOLS(ontoClass));
 		
 			for(Entry<String, String> entry : urlsOTermParents.entrySet()) {
@@ -290,15 +295,7 @@ public class OLSCallController {
     
     	JSONObject resultObject = new JSONObject();
     	
-    	// Get the unfiltered results
-    	JSONArray result = getTreeRecursion(parent, ontology, ontoClass);
-
-
-    	// Do the filtering - we keep the matching terms + all their parents
-    	if(!filter.equals("")) {
-    		result = filterGetTreeResults(result, filter);
-    	}
-    	
+  	
     	AbstractRepository repo = getRepoImpl(ontology);
     	if(repo == null) {
     		logger.warn("Ontology "+ontology+" not supported.");
@@ -306,135 +303,58 @@ public class OLSCallController {
     	}
     	
     	
+		
+		Properties prop = new Properties();
+		try {
+		    //load a properties file from class path, inside static method
+		    prop.load(Application.class.getClassLoader().getResourceAsStream("application.properties"));
+
+		} 
+		catch (IOException ex) {
+		    ex.printStackTrace();
+		}
+		
+		
+    	Driver driver = GraphDatabase.driver( prop.getProperty("spring.data.neo4j.uri"), AuthTokens.basic( 
+    			prop.getProperty("spring.data.neo4j.username"), 
+    			prop.getProperty("spring.data.neo4j.password") ) 
+    			);
+    	Session session = driver.session();
+
+    	StatementResult result;
     	
-    	// root object
-    	resultObject.put("iri", parent);
-    	resultObject.put("label", repo.findByIri(parent).get(0).getLabel());
-    	resultObject.put("children", result);
+    	// it is running a raw Cypher query, because the result is always one "record" 
+    	// reason: the query uses the APOC plugin to convert the results into a tree
+    	if(filter.isEmpty()) {
+    		result = session.run( "MATCH p=(n:AbstractTerm)<-[:CHILD*]-(m) WHERE n.iri CONTAINS '"+parent+"' AND lower(n.ontoclass) CONTAINS lower('"+ontoClass+"') WITH COLLECT(p) AS ps CALL apoc.convert.toTree(ps) yield value RETURN value;" );
+    	} else {
+    		result = session.run( "MATCH p=(n:AbstractTerm)<-[:CHILD*]-(m) WHERE n.iri CONTAINS '"+parent+"' AND lower(n.ontoclass) CONTAINS lower('"+ontoClass+"') AND m.iri CONTAINS '"+filter+"' WITH COLLECT(p) AS ps CALL apoc.convert.toTree(ps) yield value RETURN value;" );
+    	}
     	
     	
+    	JSONArray  ResultJSON = new JSONArray();
     	
+    	// todo here: restructure
+    	// consider exchanging Gson to org.json tools...
+    	while ( result.hasNext() ) {
+    	    Record record = result.next();
+    	    ResultJSON.put(new JSONObject(record.asMap()));
+    	}
+    	session.close();
+    	driver.close();    	
+    	
+   	
+    	resultObject.put("Tree", ResultJSON);
     	
     	return resultObject.toString();
 
     }
     
     
-    /**
-     * Filters a given getTree result array
-     * Keeps:
-     * - matching terms
-     * - all the parents of the matching terms
-     * @param original
-     * @param filter
-     * @return
-     */
-    private JSONArray filterGetTreeResults(JSONArray orig, String filter) {
-    	logger.info("O"+orig.toString());
-    	if(descendantsMatch(orig, filter)) {
-    		JSONArray matchingDescendants = new JSONArray();
-    		for(int i = 0; i < orig.length(); i ++) {
-        		JSONObject origChild = (JSONObject) orig.get(i);
-        		
-        		if(origChild.has("children")) {
-        			JSONArray matchingGrandchildren = filterGetTreeResults((JSONArray) origChild.get("children"), filter);
-        			logger.info("MGC:"+matchingGrandchildren.toString());
-        			if(matchingGrandchildren.length() > 0) {
-        				logger.info("Matching grandchild!");
-        				JSONObject matchingChild = new JSONObject();
-            			matchingChild.put("iri", origChild.get("iri"));
-            			matchingChild.put("label", origChild.get("label"));
-            			matchingChild.put("children", matchingGrandchildren);
-            			matchingDescendants.put(matchingChild);
-        			}
-        		} else {
-        			// we are at a leaf, if matches add it, otherwise skip
-        			if(origChild.get("label").toString().contains(filter)) {
-        				JSONObject matchingChild = new JSONObject();
-            			matchingChild.put("iri", origChild.get("iri"));
-            			matchingChild.put("label", origChild.get("label"));
-            			matchingDescendants.put(matchingChild);
-        			}
-        		}
-    		}
-    		return matchingDescendants;
-    	} else {
-    		return new JSONArray();
-    	}
-    }
-    
-    /**
-     * Check if one the descendants of a term match the filter
-     * @param orig
-     * @param filter
-     * @return
-     */
-    private boolean descendantsMatch(JSONArray orig, String filter) {
-    	if(orig.toString().contains(filter))
-    		return true;
-    	else
-    		return false;
-    }
-    
-    /**
-     * Recursive function to get the tree - to be wrapped into the result object
-     * @param parent
-     * @param ontology
-     * @param ontoClass
-     * @param filter
-     * @return
-     */
-    private JSONArray getTreeRecursion(String parent, String ontology, String ontoClass) {
-    	JSONArray returnObject = new JSONArray();
-    	JSONArray childrenArray = new JSONArray();
-    	JSONObject childObject = new JSONObject();  
-    	
-    	if(visitedTerms == null)
-    		visitedTerms = new ArrayList<String>();
-    	
-    	AbstractRepository repo = getRepoImpl(ontology);
-    	if(repo == null) {
-    		logger.warn("Ontology "+ontology+" not supported.");
-    		return new JSONArray("error");
-    	}
-    	
-		List<AbstractTerm> children = new ArrayList<AbstractTerm>();
-		
-		if(ontoClass.isEmpty()) {
-			children = repo.findByParent(parent);
-		} else {
-			children = repo.findByParent(parent, ontoClass);
-		}
-
-		for(AbstractTerm t : children) {
-			
-			if(visitedTerms.contains(t.getIri())) {
-				logger.info("Loop in the tree! " + t.getIri() + " of " + parent);
-			} else {
-
-				childObject.put("iri", t.getIri());			
-				childObject.put("label", t.getLabel());
-
-				JSONArray childrenJSON = getTreeRecursion(t.getIri(), ontology, ontoClass);
-				if(childrenJSON.length() > 0)
-					childObject.put("children", childrenJSON);
-				
-				if(childObject.length() > 0)
-					childrenArray.put(childObject);
-				childObject = new JSONObject();  
-			}
-		}   	
-    	
-		if(childrenArray.length() > 0)
-			returnObject.put(childrenArray);
-			
-    	
-    	return childrenArray;
-    }
 	
 	/**
 	 * Returns the terms that have the parent specified in the parameter
-	 * Uses the CHILD_OF relation
+	 * Uses the CHILD relation
 	 * 
      * @param parent
      * @param ontology
@@ -468,7 +388,7 @@ public class OLSCallController {
 			childrenArray.put(t.toJSON());
 		}   	
     	
-    	returnObject.append("getChildrenResult", childrenArray);
+    	returnObject.put("getChildrenResult", childrenArray);
     	
     	return returnObject.toString();
     	
@@ -540,9 +460,9 @@ public class OLSCallController {
 		
     	logger.info("Suggest called: " + label + " / "+ ontology + " / " + ontClass);
     	
-    	returnObject.append("@context", ontology);
+    	returnObject.put("@context", ontology);
     	if(!ontClass.isEmpty())
-			returnObject.append("class", ontClass);
+			returnObject.put("class", ontClass);
     	
     	List<AbstractTerm> hits = new ArrayList<AbstractTerm>();
     	
@@ -556,7 +476,7 @@ public class OLSCallController {
 			logger.info("Suggest hit: " + t.getIri());
 		}    	
     	
-    	returnObject.append(label, suggestArray);
+    	returnObject.put(label, suggestArray);
     	
     	return returnObject.toString();
     	

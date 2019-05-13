@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -177,6 +175,18 @@ public class CellosaurusConnector implements ExternalServiceConnector {
 
 	@Override
 	public Object getRepo() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void saveOne(String iri, String ontoclass) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public AbstractTerm saveOneTerm(String ontoClass, AbstractTerm pt) throws ExternalServiceConnectorException {
 		// TODO Auto-generated method stub
 		return null;
 	}
